@@ -1,19 +1,13 @@
-const { createClient } = require("redis");
+import { createClient } from "redis";
 
 const redis = createClient({
-
     url: "redis://localhost:6379"
-
 });
 
-redis.on("error", err => console.log(err));
+redis.on("error", (err) => console.log(err));
 
-(async () => {
+await redis.connect();
 
-    await redis.connect();
+console.log("Redis Connected");
 
-    console.log("Redis Connected");
-
-})();
-
-module.exports = redis;
+export default redis;

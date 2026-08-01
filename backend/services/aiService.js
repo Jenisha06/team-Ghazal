@@ -1,5 +1,4 @@
-const axios = require("axios");
-
+import axios from "axios";
 
 async function analyzeTicket(ticket, historicalTickets) {
 
@@ -181,4 +180,4 @@ Expected JSON:
 }
 
 
-module.exports = analyzeTicket;
+export default analyzeTicket;
