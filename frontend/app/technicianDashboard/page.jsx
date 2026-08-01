@@ -90,6 +90,7 @@ function MainContent() {
 
       <StatCards />
       <RecentAssignedTickets />
+      
     </main>
   );
 }

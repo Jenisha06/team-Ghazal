@@ -1,5 +1,5 @@
 "use client";
-
+import AIChatWidget from "./AIChatWidget";
 import {
   LayoutDashboard,
   Cpu,
@@ -26,6 +26,7 @@ export default function DashboardPage() {
       <div className="flex">
         <MainContent />
       </div>
+      <AIChatWidget />
     </div>
   );
 }

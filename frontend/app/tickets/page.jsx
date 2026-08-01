@@ -18,13 +18,7 @@ export default function TicketManagementPage() {
   return (
     <div className="min-h-screen bg-[#F7F3ED] text-[#2B2118]">
       <TopNav />
-<<<<<<< HEAD
       <MainContent />
-=======
-      <div className="flex">
-        <MainContent />
-      </div>
->>>>>>> 42f0d84da90c4e817acf47aeca3860b918c163ca
     </div>
   );
 }
@@ -99,10 +93,7 @@ function MainContent() {
             Monitor and resolve operational requests across all units.
           </p>
         </div>
-<<<<<<< HEAD
        
-=======
->>>>>>> 42f0d84da90c4e817acf47aeca3860b918c163ca
       </div>
 
       <Filters />
@@ -224,10 +215,7 @@ function TicketsTable() {
             <th className="px-6 py-4">ATM ID</th>
             <th className="px-6 py-4">ISSUE</th>
             <th className="px-6 py-4">ENGINEER</th>
-<<<<<<< HEAD
            
-=======
->>>>>>> 42f0d84da90c4e817acf47aeca3860b918c163ca
             <th className="px-6 py-4">STATUS</th>
             <th className="px-6 py-4">CREATED</th>
             <th className="px-6 py-4">ACTION</th>
@@ -241,19 +229,10 @@ function TicketsTable() {
               <td className="px-6 py-5 align-top max-w-[160px]">{t.issue}</td>
               <td className="px-6 py-5 align-top">
                 <div className="flex items-center gap-2.5">
-<<<<<<< HEAD
-               
-                  <span>{t.engineer}</span>
-                </div>
-              </td>
-             
-              <td className="px-6 py-5 align-top">
-=======
                   <span>{t.engineer}</span>
                 </div>
               </td>
                 <td className="px-6 py-5 align-top">
->>>>>>> 42f0d84da90c4e817acf47aeca3860b918c163ca
                 <span
                   className={`text-xs font-semibold px-2.5 py-1 rounded ${statusStyle[t.status]}`}
                 >
@@ -322,7 +301,6 @@ function Pagination() {
   );
 }
 
-<<<<<<< HEAD
 /* ---------------- BOTTOM CARDS ---------------- */
 
 function BottomCards() {
@@ -334,5 +312,3 @@ function BottomCards() {
     </div>
   );
 }
-=======
->>>>>>> 42f0d84da90c4e817acf47aeca3860b918c163ca
