@@ -119,14 +119,21 @@ function TicketInformation() {
   return (
     <Card icon={Info} title="Ticket Information">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4">
-        <Field label="TICKET ID" value="#T-8429" />
         <Field label="ATM ID" value="ATM-NYC-402" />
         <Field label="LOCATION" value="5th Ave, New York, NY" />
-        <Field
+        {/* <Field
           label="PRIORITY"
           value={
             <span className="text-xs font-semibold bg-[#FBE3E1] text-[#C0392B] px-2.5 py-1 rounded">
               CRITICAL
+            </span>
+          }
+        /> */}
+        <Field
+          label="ASSET MODEL"
+          value={
+            <span className="flex items-center gap-2">
+              Sarah Jenkins
             </span>
           }
         />
@@ -138,6 +145,14 @@ function TicketInformation() {
                 SJ
               </span>
               Sarah Jenkins
+            </span>
+          }
+        />
+        <Field
+          label="STATUS"
+          value={
+            <span className="flex items-center gap-2">
+              Closed
             </span>
           }
         />
@@ -196,6 +211,12 @@ function TechnicianReport() {
               HARDWARE MAINTENANCE
             </span>
           </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-[#6B6357]">Preventive Action</span>
+            <span className="text-sm font-semibold">
+              Physical clearance &amp; reset
+            </span>
+          </div>
         </div>
       </div>
     </Card>
@@ -228,9 +249,9 @@ function HistoricalIncidents() {
         <thead>
           <tr className="text-left text-xs text-[#8A8172] font-medium bg-[#FBF3EA]">
             <th className="px-4 py-3 rounded-l-md">Ticket</th>
+            <th className="px-4 py-3">Issue</th>
             <th className="px-4 py-3">Root Cause</th>
-            <th className="px-4 py-3">Resolution</th>
-            <th className="px-4 py-3 text-right rounded-r-md">Similarity %</th>
+            <th className="px-4 py-3 rounded-r-md">Repair Method</th>
           </tr>
         </thead>
         <tbody>
@@ -239,17 +260,7 @@ function HistoricalIncidents() {
               <td className="px-4 py-4 font-semibold">{r.ticket}</td>
               <td className="px-4 py-4 text-[#4A3F33]">{r.rootCause}</td>
               <td className="px-4 py-4 text-[#4A3F33]">{r.resolution}</td>
-              <td className="px-4 py-4 text-right">
-                <span
-                  className={`text-xs font-semibold px-2.5 py-1 rounded ${
-                    r.strong
-                      ? "bg-[#3D2B1F] text-white"
-                      : "bg-[#EDE6D8] text-[#6B6357]"
-                  }`}
-                >
-                  {r.similarity}
-                </span>
-              </td>
+              <td className="px-4 py-4 text-[#4A3F33]">{r.resolution}</td>
             </tr>
           ))}
         </tbody>
