@@ -1,14 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
-  LayoutDashboard,
-  Ticket,
   Cpu,
-  Zap,
-  Users,
-  FileText,
-  LogOut,
   Bell,
   Settings,
   Download,
@@ -23,10 +18,7 @@ export default function TicketManagementPage() {
   return (
     <div className="min-h-screen bg-[#F7F3ED] text-[#2B2118]">
       <TopNav />
-      <div className="flex">
-        <Sidebar />
-        <MainContent />
-      </div>
+      <MainContent />
     </div>
   );
 }
@@ -34,26 +26,39 @@ export default function TicketManagementPage() {
 /* ---------------- TOP NAV ---------------- */
 
 function TopNav() {
+  const links = [
+    { label: "Dashboard", href: "/technicianDashboard" },
+    { label: "Tickets", href: "/tickets" },
+    
+  ];
+
   return (
     <header className="flex items-center justify-between px-8 h-[72px] bg-[#FBF7F1] border-b border-[#E9E2D4]">
       <div className="flex items-center gap-10">
-        <span className="text-lg font-semibold">OpsMemory AI</span>
-        <nav className="flex items-center gap-8 text-sm text-[#6B6357]">
-          <a href="#" className="hover:text-[#2B2118] transition">
-            Dashboard
-          </a>
-          <a
-            href="#"
-            className="text-[#2B2118] font-medium border-b-2 border-[#2B2118] pb-5 -mb-5"
-          >
-            Analytics
-          </a>
-          <a href="#" className="hover:text-[#2B2118] transition">
-            Assets
-          </a>
-          <a href="#" className="hover:text-[#2B2118] transition">
-            Workflows
-          </a>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-md bg-[#3D2B1F] flex items-center justify-center">
+            <Cpu className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-lg font-semibold">OpsMemory AI</span>
+        </div>
+
+        <nav className="flex items-center gap-8 text-sm">
+          {links.map((l) => {
+            const active = l.label === "Tickets";
+            return (
+              <Link
+                key={l.label}
+                href={l.href}
+                className={
+                  active
+                    ? "text-[#2B2118] font-medium border-b-2 border-[#2B2118] pb-5 -mb-5"
+                    : "text-[#6B6357] hover:text-[#2B2118] transition"
+                }
+              >
+                {l.label}
+              </Link>
+            );
+          })}
         </nav>
       </div>
 
@@ -75,75 +80,11 @@ function TopNav() {
   );
 }
 
-/* ---------------- SIDEBAR ---------------- */
-
-function Sidebar() {
-  const navItems = [
-    { icon: LayoutDashboard, label: "Overview" },
-    { icon: Ticket, label: "Tickets", active: true },
-    { icon: Cpu, label: "Memory Bank" },
-    { icon: Zap, label: "Automations" },
-    { icon: Users, label: "Team" },
-  ];
-
-  return (
-    <aside className="w-[280px] shrink-0 border-r border-[#E9E2D4] px-5 py-6 flex flex-col justify-between min-h-[calc(100vh-72px)]">
-      <div>
-        <div className="flex items-center gap-3 px-2 mb-8">
-          <div className="w-9 h-9 rounded-md bg-[#3D2B1F] text-white flex items-center justify-center">
-            <Cpu className="w-4 h-4" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold leading-tight">OpsMemory</p>
-            <p className="text-[10px] tracking-wide text-[#A39B8C] font-medium">
-              Enterprise Tier
-            </p>
-          </div>
-        </div>
-
-        <nav className="space-y-1">
-          {navItems.map(({ icon: Icon, label, active }) => (
-            <a
-              key={label}
-              href="#"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                active
-                  ? "bg-[#3D2B1F] text-white"
-                  : "text-[#6B6357] hover:bg-[#F0EAE0]"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </a>
-          ))}
-        </nav>
-      </div>
-
-      <div className="border-t border-[#E9E2D4] pt-4 space-y-1">
-        <a
-          href="#"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#6B6357] hover:bg-[#F0EAE0] transition"
-        >
-          <FileText className="w-4 h-4" />
-          Documentation
-        </a>
-        <a
-          href="#"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#6B6357] hover:bg-[#F0EAE0] transition"
-        >
-          <LogOut className="w-4 h-4" />
-          Log Out
-        </a>
-      </div>
-    </aside>
-  );
-}
-
 /* ---------------- MAIN CONTENT ---------------- */
 
 function MainContent() {
   return (
-    <main className="flex-1 px-10 py-8">
+    <main className="px-10 py-8 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
@@ -152,10 +93,7 @@ function MainContent() {
             Monitor and resolve operational requests across all units.
           </p>
         </div>
-        <button className="flex items-center gap-2 border border-[#E9E2D4] bg-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-[#F0EAE0] transition">
-          <Download className="w-4 h-4" />
-          Export CSV
-        </button>
+       
       </div>
 
       <Filters />
@@ -223,8 +161,8 @@ const TICKETS = [
     atm: "ATM-NYC-402",
     issue: "Cash Dispenser Jam",
     engineer: "Sarah Jenkins",
-    avatar: "https://i.pravatar.cc/40?img=47",
-    priority: "Critical",
+    
+    
     status: "In Progress",
     created: "Jan 24, 2024",
   },
@@ -233,8 +171,8 @@ const TICKETS = [
     atm: "ATM-CHI-115",
     issue: "Screen Connectivity Error",
     engineer: "Marcus Thorne",
-    avatar: "https://i.pravatar.cc/40?img=12",
-    priority: "Medium",
+  
+   
     status: "Open",
     created: "Jan 23, 2024",
   },
@@ -243,8 +181,8 @@ const TICKETS = [
     atm: "ATM-SF-882",
     issue: "Security Camera Obscured",
     engineer: "Elena Rodriguez",
-    avatar: "https://i.pravatar.cc/40?img=32",
-    priority: "High",
+
+   
     status: "Resolved",
     created: "Jan 22, 2024",
   },
@@ -253,19 +191,14 @@ const TICKETS = [
     atm: "ATM-LON-021",
     issue: "OS Update Required",
     engineer: "David Chen",
-    avatar: "https://i.pravatar.cc/40?img=15",
-    priority: "Low",
+    
+    
     status: "In Progress",
     created: "Jan 22, 2024",
   },
 ];
 
-const priorityStyle = {
-  Critical: "bg-[#FBE3E1] text-[#C0392B]",
-  High: "bg-[#FBEAD4] text-[#B8860B]",
-  Medium: "bg-[#EDE6D8] text-[#6B6357]",
-  Low: "bg-[#DCEBFB] text-[#2E6DA4]",
-};
+
 
 const statusStyle = {
   "In Progress": "bg-[#F3A93C] text-[#3D2B1F]",
@@ -283,7 +216,7 @@ function TicketsTable() {
             <th className="px-6 py-4">ATM ID</th>
             <th className="px-6 py-4">ISSUE</th>
             <th className="px-6 py-4">ENGINEER</th>
-            <th className="px-6 py-4">PRIORITY</th>
+           
             <th className="px-6 py-4">STATUS</th>
             <th className="px-6 py-4">CREATED</th>
             <th className="px-6 py-4">ACTION</th>
@@ -297,21 +230,11 @@ function TicketsTable() {
               <td className="px-6 py-5 align-top max-w-[160px]">{t.issue}</td>
               <td className="px-6 py-5 align-top">
                 <div className="flex items-center gap-2.5">
-                  <img
-                    src={t.avatar}
-                    alt={t.engineer}
-                    className="w-7 h-7 rounded-full object-cover"
-                  />
+               
                   <span>{t.engineer}</span>
                 </div>
               </td>
-              <td className="px-6 py-5 align-top">
-                <span
-                  className={`text-xs font-semibold px-2.5 py-1 rounded ${priorityStyle[t.priority]}`}
-                >
-                  {t.priority}
-                </span>
-              </td>
+             
               <td className="px-6 py-5 align-top">
                 <span
                   className={`text-xs font-semibold px-2.5 py-1 rounded ${statusStyle[t.status]}`}
@@ -323,9 +246,12 @@ function TicketsTable() {
                 {t.created}
               </td>
               <td className="px-6 py-5 align-top">
-                <button className="border border-[#E9E2D4] rounded-md px-4 py-1.5 text-sm font-medium hover:bg-[#F7F3ED] transition">
+                <Link
+                  href="/ticketDetails"
+                  className="inline-block border border-[#E9E2D4] rounded-md px-4 py-1.5 text-sm font-medium hover:bg-[#F7F3ED] transition"
+                >
                   View
-                </button>
+                </Link>
               </td>
             </tr>
           ))}
@@ -383,39 +309,9 @@ function Pagination() {
 function BottomCards() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="bg-white border border-[#E9E2D4] rounded-xl p-6">
-        <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="w-4 h-4 text-[#B8860B]" />
-          <span className="text-xs font-semibold tracking-wide text-[#B8860B]">
-            PREDICTIVE MAINTENANCE
-          </span>
-        </div>
-        <h3 className="text-xl font-bold mb-2">Common Failure Pattern</h3>
-        <p className="text-sm text-[#8A8172] leading-relaxed">
-          Cash dispenser jams are trending 18% higher this month across
-          Northeast branches, most often on units past their 6-month service
-          window.
-        </p>
-      </div>
+      
 
-      <div className="bg-white border border-[#E9E2D4] rounded-xl p-6">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-[#2E7D32]" />
-            <span className="text-xs font-semibold tracking-wide text-[#2B2118]">
-              RESOLUTION EFFICIENCY
-            </span>
-          </div>
-          <span className="text-xs font-semibold text-[#2E7D32] bg-[#E3F3E5] px-2.5 py-1 rounded-full">
-            +12% vs last week
-          </span>
-        </div>
-        <h3 className="text-xl font-bold mb-2">Avg. Handle Time Improving</h3>
-        <p className="text-sm text-[#8A8172] leading-relaxed">
-          Engineers are closing tickets faster this week thanks to AI-assisted
-          diagnostics on recurring hardware issues.
-        </p>
-      </div>
+    
     </div>
   );
 }
