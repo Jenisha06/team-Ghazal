@@ -1,14 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
-  LayoutDashboard,
-  Ticket,
   Cpu,
-  Zap,
-  Users,
-  FileText,
-  LogOut,
   Bell,
   Settings,
   Download,
@@ -23,9 +18,13 @@ export default function TicketManagementPage() {
   return (
     <div className="min-h-screen bg-[#F7F3ED] text-[#2B2118]">
       <TopNav />
+<<<<<<< HEAD
+      <MainContent />
+=======
       <div className="flex">
         <MainContent />
       </div>
+>>>>>>> 42f0d84da90c4e817acf47aeca3860b918c163ca
     </div>
   );
 }
@@ -33,26 +32,39 @@ export default function TicketManagementPage() {
 /* ---------------- TOP NAV ---------------- */
 
 function TopNav() {
+  const links = [
+    { label: "Dashboard", href: "/technicianDashboard" },
+    { label: "Tickets", href: "/tickets" },
+    
+  ];
+
   return (
     <header className="flex items-center justify-between px-8 h-[72px] bg-[#FBF7F1] border-b border-[#E9E2D4]">
       <div className="flex items-center gap-10">
-        <span className="text-lg font-semibold">OpsMemory AI</span>
-        <nav className="flex items-center gap-8 text-sm text-[#6B6357]">
-          <a href="#" className="hover:text-[#2B2118] transition">
-            Dashboard
-          </a>
-          <a
-            href="#"
-            className="text-[#2B2118] font-medium border-b-2 border-[#2B2118] pb-5 -mb-5"
-          >
-            Analytics
-          </a>
-          <a href="#" className="hover:text-[#2B2118] transition">
-            Assets
-          </a>
-          <a href="#" className="hover:text-[#2B2118] transition">
-            Workflows
-          </a>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-md bg-[#3D2B1F] flex items-center justify-center">
+            <Cpu className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-lg font-semibold">OpsMemory AI</span>
+        </div>
+
+        <nav className="flex items-center gap-8 text-sm">
+          {links.map((l) => {
+            const active = l.label === "Tickets";
+            return (
+              <Link
+                key={l.label}
+                href={l.href}
+                className={
+                  active
+                    ? "text-[#2B2118] font-medium border-b-2 border-[#2B2118] pb-5 -mb-5"
+                    : "text-[#6B6357] hover:text-[#2B2118] transition"
+                }
+              >
+                {l.label}
+              </Link>
+            );
+          })}
         </nav>
       </div>
 
@@ -78,7 +90,7 @@ function TopNav() {
 
 function MainContent() {
   return (
-    <main className="flex-1 px-10 py-8">
+    <main className="px-10 py-8 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
@@ -87,6 +99,10 @@ function MainContent() {
             Monitor and resolve operational requests across all units.
           </p>
         </div>
+<<<<<<< HEAD
+       
+=======
+>>>>>>> 42f0d84da90c4e817acf47aeca3860b918c163ca
       </div>
 
       <Filters />
@@ -153,8 +169,8 @@ const TICKETS = [
     atm: "ATM-NYC-402",
     issue: "Cash Dispenser Jam",
     engineer: "Sarah Jenkins",
-    avatar: "https://i.pravatar.cc/40?img=47",
-    priority: "Critical",
+    
+    
     status: "In Progress",
     created: "Jan 24, 2024",
   },
@@ -163,8 +179,8 @@ const TICKETS = [
     atm: "ATM-CHI-115",
     issue: "Screen Connectivity Error",
     engineer: "Marcus Thorne",
-    avatar: "https://i.pravatar.cc/40?img=12",
-    priority: "Medium",
+  
+   
     status: "Open",
     created: "Jan 23, 2024",
   },
@@ -173,8 +189,8 @@ const TICKETS = [
     atm: "ATM-SF-882",
     issue: "Security Camera Obscured",
     engineer: "Elena Rodriguez",
-    avatar: "https://i.pravatar.cc/40?img=32",
-    priority: "High",
+
+   
     status: "Resolved",
     created: "Jan 22, 2024",
   },
@@ -183,19 +199,14 @@ const TICKETS = [
     atm: "ATM-LON-021",
     issue: "OS Update Required",
     engineer: "David Chen",
-    avatar: "https://i.pravatar.cc/40?img=15",
-    priority: "Low",
+    
+    
     status: "In Progress",
     created: "Jan 22, 2024",
   },
 ];
 
-const priorityStyle = {
-  Critical: "bg-[#FBE3E1] text-[#C0392B]",
-  High: "bg-[#FBEAD4] text-[#B8860B]",
-  Medium: "bg-[#EDE6D8] text-[#6B6357]",
-  Low: "bg-[#DCEBFB] text-[#2E6DA4]",
-};
+
 
 const statusStyle = {
   "In Progress": "bg-[#F3A93C] text-[#3D2B1F]",
@@ -213,6 +224,10 @@ function TicketsTable() {
             <th className="px-6 py-4">ATM ID</th>
             <th className="px-6 py-4">ISSUE</th>
             <th className="px-6 py-4">ENGINEER</th>
+<<<<<<< HEAD
+           
+=======
+>>>>>>> 42f0d84da90c4e817acf47aeca3860b918c163ca
             <th className="px-6 py-4">STATUS</th>
             <th className="px-6 py-4">CREATED</th>
             <th className="px-6 py-4">ACTION</th>
@@ -226,10 +241,19 @@ function TicketsTable() {
               <td className="px-6 py-5 align-top max-w-[160px]">{t.issue}</td>
               <td className="px-6 py-5 align-top">
                 <div className="flex items-center gap-2.5">
+<<<<<<< HEAD
+               
+                  <span>{t.engineer}</span>
+                </div>
+              </td>
+             
+              <td className="px-6 py-5 align-top">
+=======
                   <span>{t.engineer}</span>
                 </div>
               </td>
                 <td className="px-6 py-5 align-top">
+>>>>>>> 42f0d84da90c4e817acf47aeca3860b918c163ca
                 <span
                   className={`text-xs font-semibold px-2.5 py-1 rounded ${statusStyle[t.status]}`}
                 >
@@ -240,9 +264,12 @@ function TicketsTable() {
                 {t.created}
               </td>
               <td className="px-6 py-5 align-top">
-                <button className="border border-[#E9E2D4] rounded-md px-4 py-1.5 text-sm font-medium hover:bg-[#F7F3ED] transition">
+                <Link
+                  href="/ticketDetails"
+                  className="inline-block border border-[#E9E2D4] rounded-md px-4 py-1.5 text-sm font-medium hover:bg-[#F7F3ED] transition"
+                >
                   View
-                </button>
+                </Link>
               </td>
             </tr>
           ))}
@@ -295,3 +322,17 @@ function Pagination() {
   );
 }
 
+<<<<<<< HEAD
+/* ---------------- BOTTOM CARDS ---------------- */
+
+function BottomCards() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      
+
+    
+    </div>
+  );
+}
+=======
+>>>>>>> 42f0d84da90c4e817acf47aeca3860b918c163ca

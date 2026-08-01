@@ -1,17 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import {
-  Search,
+  Cpu,
   Bell,
   Info,
   UserCog,
   History,
-  Sparkles,
-  Lightbulb,
-  BarChart2,
-  List,
   ChevronRight,
-  Check,
 } from "lucide-react";
 
 export default function TicketDetailPage() {
@@ -26,33 +22,35 @@ export default function TicketDetailPage() {
 /* ---------------- TOP NAV ---------------- */
 
 function TopNav() {
+  const links = [
+    { label: "Dashboard", href: "/technicianDashboard" },
+    { label: "Tickets", href: "/tickets" },
+  ];
+
   return (
     <header className="flex items-center justify-between px-8 h-[72px] bg-[#FBF7F1] border-b border-[#E9E2D4]">
       <div className="flex items-center gap-10">
-        <span className="text-lg font-semibold">OpsMemory AI</span>
-        <nav className="flex items-center gap-8 text-sm text-[#6B6357]">
-          <a href="#" className="hover:text-[#2B2118] transition">
-            Dashboard
-          </a>
-          <a href="#" className="hover:text-[#2B2118] transition">
-            Analytics
-          </a>
-          <a
-            href="#"
-            className="text-[#2B2118] font-medium border-b-2 border-[#2B2118] pb-5 -mb-5"
-          >
-            Assets
-          </a>
-          <a href="#" className="hover:text-[#2B2118] transition">
-            Workflows
-          </a>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-md bg-[#3D2B1F] flex items-center justify-center">
+            <Cpu className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-lg font-semibold">OpsMemory AI</span>
+        </div>
+
+        <nav className="flex items-center gap-8 text-sm">
+          {links.map((l) => (
+            <Link
+              key={l.label}
+              href={l.href}
+              className="text-[#6B6357] hover:text-[#2B2118] transition"
+            >
+              {l.label}
+            </Link>
+          ))}
         </nav>
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#F0EAE0] transition">
-          <Search className="w-4.5 h-4.5" />
-        </button>
         <button className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#F0EAE0] transition">
           <Bell className="w-4.5 h-4.5" />
         </button>
@@ -121,14 +119,6 @@ function TicketInformation() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4">
         <Field label="ATM ID" value="ATM-NYC-402" />
         <Field label="LOCATION" value="5th Ave, New York, NY" />
-        {/* <Field
-          label="PRIORITY"
-          value={
-            <span className="text-xs font-semibold bg-[#FBE3E1] text-[#C0392B] px-2.5 py-1 rounded">
-              CRITICAL
-            </span>
-          }
-        /> */}
         <Field
           label="ASSET MODEL"
           value={

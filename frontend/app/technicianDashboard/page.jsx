@@ -24,9 +24,9 @@ export default function TechnicianDashboardPage() {
 
 function TopNav() {
   const links = [
-    { label: "Dashboard", href: "/dashboard" },
+    { label: "Dashboard", href: "/technicianDashboard" },
     { label: "Tickets", href: "/tickets" },
-    { label: "Memory Bank", href: "/ticketDetails" },
+    
   ];
 
   return (
