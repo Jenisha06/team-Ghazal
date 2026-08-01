@@ -76,25 +76,31 @@ export const login = async (req, res) => {
 
         const token = generateToken(user);
 
-        return res.status(200).json({
+        res.cookie(
+    "token",
+    token,
+    {
+        httpOnly:false,
+        secure:false,
+        sameSite:"lax",
+        maxAge:24*60*60*1000
+    }
+);
 
-            success: true,
 
-            token,
+return res.status(200).json({
 
-            user: {
+    success:true,
 
-                id: user.id,
+    user:{
+        id:user.id,
+        name:user.name,
+        email:user.email,
+        role:user.role,
+        engineer_id:user.engineer_id
+    }
 
-                name: user.name,
-
-                email: user.email,
-
-                role: user.role
-
-            }
-
-        });
+});
 
     }
 

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { saveToken } from "@/lib/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -83,8 +82,7 @@ const [loading,setLoading]=useState(false);
         }
 
 
-        // Save JWT token
-        saveToken(data.token);
+      
 
 
         // Redirect based on role

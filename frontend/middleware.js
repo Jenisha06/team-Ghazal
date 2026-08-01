@@ -4,56 +4,98 @@ import { jwtDecode } from "jwt-decode";
 
 export function middleware(request) {
 
+
     const token = request.cookies.get("token")?.value;
 
 
     const { pathname } = request.nextUrl;
 
 
-    // If no token and trying to access dashboard
-    if (
-        !token &&
+
+    // Protect admin dashboard
+
+    if(
         pathname.startsWith("/dashboard")
-    ) {
+    ){
 
-        return NextResponse.redirect(
-            new URL("/login", request.url)
-        );
+        if(!token){
 
-    }
+            return NextResponse.redirect(
+                new URL("/login",request.url)
+            );
 
+        }
 
-    // If token exists, verify role
-    if(token){
 
         try{
 
             const user = jwtDecode(token);
 
 
-            // Only admin dashboard
-            if(
-                pathname.startsWith("/dashboard") &&
-                user.role !== "admin"
-            ){
+
+            if(user.role !== "admin"){
 
                 return NextResponse.redirect(
-                    new URL("/login", request.url)
+                    new URL("/login",request.url)
                 );
 
             }
 
 
         }
-        catch(error){
+        catch(err){
 
             return NextResponse.redirect(
-                new URL("/login", request.url)
+                new URL("/login",request.url)
             );
 
         }
 
     }
+
+
+
+    // Protect technician dashboard
+
+    if(
+        pathname.startsWith("/technician/dashboard")
+    ){
+
+        if(!token){
+
+            return NextResponse.redirect(
+                new URL("/login",request.url)
+            );
+
+        }
+
+
+        try{
+
+            const user = jwtDecode(token);
+
+
+
+            if(user.role !== "technician"){
+
+                return NextResponse.redirect(
+                    new URL("/login",request.url)
+                );
+
+            }
+
+
+        }
+        catch(err){
+
+            return NextResponse.redirect(
+                new URL("/login",request.url)
+            );
+
+        }
+
+    }
+
 
 
     return NextResponse.next();
@@ -65,7 +107,8 @@ export function middleware(request) {
 export const config = {
 
     matcher:[
-        "/dashboard/:path*"
+        "/dashboard/:path*",
+        "/technician/dashboard/:path*"
     ]
 
 };

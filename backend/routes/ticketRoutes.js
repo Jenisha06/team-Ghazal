@@ -1,8 +1,9 @@
 import express from "express";
+import {verifyToken} from "../middleware/authMiddleware.js";
+import {getTickets} from "../controllers/ticketController.js";
+
 
 import {
-
-    getTickets,
 
     getTicket,
 
@@ -14,9 +15,14 @@ import {
 
 const router = express.Router();
 
-router.get("/", getTickets);
+router.get(
+    "/",
+    verifyToken,
+    getTickets
+);
 
-router.get("/:ticket_id", getTicket);
+
+router.get("/:ticket_id", verifyToken, getTicket);
 
 router.post("/", createTicket);
 

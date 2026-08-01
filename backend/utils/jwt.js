@@ -10,7 +10,8 @@ export const generateToken = (user) => {
 
             email: user.email,
 
-            role: user.role
+            role: user.role,
+            engineer_id:user.engineer_id
 
         },
 

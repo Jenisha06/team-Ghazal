@@ -1,10 +1,13 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import cookieParser from "cookie-parser";
+
 
 import ticketRoutes from "./routes/ticketRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import technicianRoutes from "./routes/technicianRoutes.js";
 
 dotenv.config();
 
@@ -18,9 +21,16 @@ app.use(
     })
 );
 
+app.use(
+"/technician",
+technicianRoutes
+);
+
 
 
 app.use(express.json());
+
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
     res.send("OpMemory Backend Running");

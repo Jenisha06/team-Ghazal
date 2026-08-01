@@ -30,3 +30,20 @@ export async function apiRequest(
     return response.json();
 
 }
+
+export async function apiFetch(url,options={}){
+
+
+    return fetch(
+        `http://localhost:5000${url}`,
+        {
+            ...options,
+            credentials:"include",
+            headers:{
+                "Content-Type":"application/json",
+                ...options.headers
+            }
+        }
+    );
+
+}

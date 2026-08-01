@@ -1,52 +1,54 @@
 import { jwtDecode } from "jwt-decode";
 
 
-export function saveToken(token){
-
-    localStorage.setItem(
-        "token",
-        token
-    );
-
-
-    document.cookie = 
-    `token=${token}; path=/; max-age=2592000`;
-
-}
-
-
-
+// Get JWT from cookie
 export function getToken(){
 
-    return localStorage.getItem(
-        "token"
+    const cookies = document.cookie.split("; ");
+
+
+    const tokenCookie = cookies.find(
+        (row)=> row.startsWith("token=")
     );
+
+
+    if(!tokenCookie)
+        return null;
+
+
+    return tokenCookie.split("=")[1];
 
 }
 
 
 
+// Decode user information from JWT
 export function getUser(){
 
-    const token=getToken();
+    const token = getToken();
 
 
     if(!token)
         return null;
 
 
-    return jwtDecode(token);
+    try{
+
+        return jwtDecode(token);
+
+    }
+    catch(error){
+
+        return null;
+
+    }
 
 }
 
 
 
+// Logout
 export function logout(){
-
-    localStorage.removeItem(
-        "token"
-    );
-
 
     document.cookie =
     "token=; path=/; max-age=0";

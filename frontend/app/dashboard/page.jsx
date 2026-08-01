@@ -19,15 +19,72 @@ import {
   ChevronRight,
 } from "lucide-react";
 
+import {apiFetch} from "@/lib/api";
+import {useState,useEffect} from "react";
+
+
 export default function DashboardPage() {
-  return (
+
+
+const [tickets,setTickets]=useState([]);
+
+
+useEffect(()=>{
+
+
+    async function loadTickets(){
+
+        try{
+
+            const res = await apiFetch("/tickets");
+
+
+            if(!res.ok){
+
+                throw new Error("Failed to fetch tickets");
+
+            }
+
+
+            const data = await res.json();
+
+
+            setTickets(data);
+
+
+        }
+        catch(error){
+
+            console.log(error);
+
+        }
+
+
+    }
+
+
+    loadTickets();
+
+
+},[]);
+
+
+
+return (
     <div className="min-h-screen bg-[#F7F3ED] text-[#2B2118]">
+
       <TopNav />
+
       <div className="flex">
-        <MainContent />
+
+        <MainContent tickets={tickets}/>
+
       </div>
+
     </div>
-  );
+);
+
+
 }
 
 /* ---------------- TOP NAV ---------------- */
@@ -80,7 +137,7 @@ function TopNav() {
 
 /* ---------------- MAIN CONTENT ---------------- */
 
-function MainContent() {
+function MainContent({tickets}) {
   return (
     <main className="flex-1 px-10 py-8">
       {/* Header */}
@@ -104,13 +161,13 @@ function MainContent() {
       </div>
 
       {/* Stat cards */}
-      <StatCards />
+      <StatCards tickets={tickets}/>
 
       {/* Charts row 1 */}
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr_360px] gap-6 mt-6">
 
         <OpenVsClosed />
-        <RecentActivity />
+<RecentActivity tickets={tickets}/>
         {/* AI Insights spans two rows via grid placement below */}
       </div>
 
@@ -120,14 +177,51 @@ function MainContent() {
 
 /* ---------------- STAT CARDS ---------------- */
 
-function StatCards() {
-  const stats = [
-    { label: "Total Tickets", value: "12,482", delta: "+12.5%", trend: "up" },
-    { label: "Open Tickets", value: "843", delta: "-3.2%", trend: "down" },
-    { label: "Closed Tickets", value: "11,639", delta: "Stable", trend: "stable" },
-    { label: "AI Reviews", value: "8,921", delta: "Active", trend: "active" },
-    { label: "Avg Res. Time", value: "14.2m", delta: "-2.4m", trend: "down" },
-  ];
+function StatCards({tickets}) {
+
+
+const totalTickets = tickets.length;
+
+
+const openTickets = tickets.filter(
+    t=>t.status !== "CLOSED"
+).length;
+
+
+const closedTickets = tickets.filter(
+    t=>t.status === "CLOSED"
+).length;
+
+
+
+const stats = [
+
+{
+label:"Total Tickets",
+value:totalTickets,
+},
+
+{
+label:"Open Tickets",
+value:openTickets,
+},
+
+{
+label:"Closed Tickets",
+value:closedTickets,
+},
+
+{
+label:"AI Reviews",
+value:tickets.length,
+},
+
+{
+label:"Avg Res. Time",
+value:"--",
+},
+
+];
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
@@ -228,33 +322,23 @@ function ChartCard({ title, action, children, titleWrap }) {
   );
 }
 
-function RecentActivity() {
-  const rows = [
-    {
-      id: "#INC-8821",
-      subject: "Memory Leak in AuthService",
-      status: "CLOSED",
-      time: "2m ago",
-      review: "Optimized",
-      reviewIcon: Sparkles,
-    },
-    {
-      id: "#INC-8819",
-      subject: "DNS Resolution Error: EMEA",
-      status: "CLOSED",
-      time: "14m ago",
-      review: "Resolved",
-      reviewIcon: Sparkles,
-    },
-    {
-      id: "#INC-8815",
-      subject: "API Latency Spike - v2 Endpoints",
-      status: "INVESTIGATING",
-      time: "28m ago",
-      review: "Queued",
-      reviewIcon: Hourglass,
-    },
-  ];
+function RecentActivity({tickets}) {
+  const rows = tickets.slice(0,5).map(ticket=>({
+
+    id:ticket.ticket_id,
+
+    subject:ticket.issue,
+
+    status:ticket.status,
+
+    time:new Date(ticket.created_at)
+        .toLocaleDateString(),
+
+    review:"Pending",
+
+    reviewIcon:Sparkles
+
+}));
 
   const statusStyle = {
     CLOSED: "bg-[#EDE6D8] text-[#6B6357]",
