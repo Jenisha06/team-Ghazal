@@ -1,5 +1,6 @@
 import { supabase } from "../config/supabase.js";
 import analyzeTicket from "../services/aiService.js";
+import redis from "../config/redis.js";
 
 export const analyzeCurrentTicket = async (ticket_id) => {
 
@@ -39,6 +40,18 @@ export const analyzeCurrentTicket = async (ticket_id) => {
 
     const similarCount = similarTickets.length;
 
+    const cacheKey = `analysis:${ticket.issue.toLowerCase()}`;
+
+const cached = await redis.get(cacheKey);
+
+if (cached) {
+
+    console.log("CACHE HIT");
+
+    return JSON.parse(cached);
+
+}
+
     // Run AI
     const aiResponse = await analyzeTicket(
         ticket,
@@ -46,6 +59,44 @@ export const analyzeCurrentTicket = async (ticket_id) => {
     );
 
     const analysis = JSON.parse(aiResponse);
+
+    const response = {
+
+    ticket_id: ticket.ticket_id,
+
+    similar_tickets_found: similarCount,
+
+    analysis_saved: true,
+
+    historical_tickets: similarTickets.map(item => ({
+
+        ticket_id: item.ticket_id,
+
+        issue: item.issue,
+
+        root_cause: item.root_cause,
+
+        repair_method: item.repair_method
+
+    })),
+
+    analysis
+
+};
+
+await redis.set(
+
+    cacheKey,
+
+    JSON.stringify(response),
+
+    {
+
+        EX: 86400
+
+    }
+
+);
 
     // Save analysis
     const { error: saveError } = await supabase
@@ -76,28 +127,6 @@ export const analyzeCurrentTicket = async (ticket_id) => {
         throw new Error(saveError.message);
     }
 
-    return {
-
-        ticket_id: ticket.ticket_id,
-
-        similar_tickets_found: similarCount,
-
-        analysis_saved: true,
-
-        historical_tickets: similarTickets.map(item => ({
-
-            ticket_id: item.ticket_id,
-
-            issue: item.issue,
-
-            root_cause: item.root_cause,
-
-            repair_method: item.repair_method
-
-        })),
-
-        analysis
-
-    };
+    return response;
 
 };

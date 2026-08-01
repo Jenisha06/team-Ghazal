@@ -28,16 +28,18 @@ export const updateTicket = async (req, res) => {
     }
 
     // Trigger AI Analysis
-    await analyzeCurrentTicket(ticket_id);
+    const analysis = await analyzeCurrentTicket(ticket_id);
 
     return res.status(200).json({
 
-        success: true,
+    success: true,
 
-        message: "Ticket completed successfully.",
+    message: "Ticket completed successfully.",
 
-        data
+    data,
 
-    });
+    analysis
+
+});
 
 };
