@@ -24,7 +24,6 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#F7F3ED] text-[#2B2118]">
       <TopNav />
       <div className="flex">
-        <Sidebar />
         <MainContent />
       </div>
     </div>
@@ -79,83 +78,6 @@ function TopNav() {
   );
 }
 
-/* ---------------- SIDEBAR ---------------- */
-
-function Sidebar() {
-  const navItems = [
-    { icon: LayoutDashboard, label: "Overview", active: true },
-    { icon: Cpu, label: "Memory Bank" },
-    { icon: Zap, label: "Automations" },
-    { icon: Users, label: "Team" },
-    { icon: Settings, label: "Settings" },
-  ];
-
-  return (
-    <aside className="w-[280px] shrink-0 border-r border-[#E9E2D4] px-5 py-6 flex flex-col justify-between min-h-[calc(100vh-72px)]">
-      <div>
-        <div className="flex items-center gap-3 px-2 mb-8">
-          <div className="w-9 h-9 rounded-md bg-[#3D2B1F] text-white flex items-center justify-center text-xs font-bold">
-            OM
-          </div>
-          <div>
-            <p className="text-sm font-semibold leading-tight">OpsMemory</p>
-            <p className="text-[10px] tracking-wide text-[#A39B8C] font-medium">
-              ENTERPRISE TIER
-            </p>
-          </div>
-        </div>
-
-        <nav className="space-y-1">
-          {navItems.map(({ icon: Icon, label, active }) => (
-            <a
-              key={label}
-              href="#"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                active
-                  ? "bg-[#3D2B1F] text-white"
-                  : "text-[#6B6357] hover:bg-[#F0EAE0]"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </a>
-          ))}
-        </nav>
-      </div>
-
-      <div>
-        <div className="border-t border-[#E9E2D4] pt-4 space-y-1 mb-4">
-          <a
-            href="#"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#6B6357] hover:bg-[#F0EAE0] transition"
-          >
-            <FileText className="w-4 h-4" />
-            Documentation
-          </a>
-          <a
-            href="#"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#6B6357] hover:bg-[#F0EAE0] transition"
-          >
-            <LogOut className="w-4 h-4" />
-            Log Out
-          </a>
-        </div>
-
-        <div className="bg-[#FBEFDB] rounded-xl p-4">
-          <p className="text-sm font-semibold mb-2">Storage Capacity</p>
-          <div className="h-1.5 rounded-full bg-[#EEE2C8] overflow-hidden mb-2">
-            <div className="h-full w-[74%] bg-[#3D2B1F] rounded-full" />
-          </div>
-          <p className="text-xs text-[#8A8172] mb-4">74% of 10TB used</p>
-          <button className="w-full bg-[#3D2B1F] text-white text-sm font-medium py-2.5 rounded-md hover:bg-[#2B1D14] transition">
-            Upgrade Plan
-          </button>
-        </div>
-      </div>
-    </aside>
-  );
-}
-
 /* ---------------- MAIN CONTENT ---------------- */
 
 function MainContent() {
@@ -186,17 +108,12 @@ function MainContent() {
 
       {/* Charts row 1 */}
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr_360px] gap-6 mt-6">
-        <TicketsOverTime />
-        <RootCause />
-        <AIInsights />
 
         <OpenVsClosed />
-        <ResTimeTrend />
+        <RecentActivity />
         {/* AI Insights spans two rows via grid placement below */}
       </div>
 
-      {/* Recent activity */}
-      <RecentActivity />
     </main>
   );
 }
@@ -209,7 +126,6 @@ function StatCards() {
     { label: "Open Tickets", value: "843", delta: "-3.2%", trend: "down" },
     { label: "Closed Tickets", value: "11,639", delta: "Stable", trend: "stable" },
     { label: "AI Reviews", value: "8,921", delta: "Active", trend: "active" },
-    { label: "Recommendations", value: "1,240", delta: "98% Acc.", trend: "sparkle" },
     { label: "Avg Res. Time", value: "14.2m", delta: "-2.4m", trend: "down" },
   ];
 
@@ -222,7 +138,6 @@ function StatCards() {
         >
           <p className="text-xs text-[#8A8172] font-medium mb-3">{s.label}</p>
           <p className="text-2xl font-bold mb-2">{s.value}</p>
-          <DeltaBadge trend={s.trend} text={s.delta} />
         </div>
       ))}
     </div>
@@ -242,78 +157,6 @@ function DeltaBadge({ trend, text }) {
     <p className={`text-xs font-medium flex items-center gap-1 ${color}`}>
       <span>{symbol}</span> {text}
     </p>
-  );
-}
-
-/* ---------------- TICKETS OVER TIME (bar chart) ---------------- */
-
-function TicketsOverTime() {
-  const bars = [55, 68, 88, 100, 78, 62, 74]; // relative heights %
-  const highlightIndex = 3;
-
-  return (
-    <ChartCard
-      title="Tickets Over Time"
-      action={<MoreHorizontal className="w-4 h-4 text-[#8A8172]" />}
-    >
-      <div className="h-56 bg-[#FBF3EA] rounded-lg flex items-end justify-center gap-4 px-6 pb-6 pt-6">
-        {bars.map((h, i) => (
-          <div
-            key={i}
-            className={`w-8 rounded-t-sm ${
-              i === highlightIndex ? "bg-[#3D2B1F]" : "bg-[#D9CFC0]"
-            }`}
-            style={{ height: `${h}%` }}
-          />
-        ))}
-      </div>
-    </ChartCard>
-  );
-}
-
-/* ---------------- ROOT CAUSE (donut chart) ---------------- */
-
-function RootCause() {
-  const pct = 42;
-  const circumference = 2 * Math.PI * 70;
-  const dash = (pct / 100) * circumference;
-
-  return (
-    <ChartCard
-      title="Root Cause"
-      action={<Filter className="w-4 h-4 text-[#8A8172]" />}
-    >
-      <div className="h-56 flex items-center justify-center">
-        <div className="relative w-44 h-44">
-          <svg viewBox="0 0 160 160" className="w-full h-full -rotate-90">
-            <circle
-              cx="80"
-              cy="80"
-              r="70"
-              fill="none"
-              stroke="#EDE6D8"
-              strokeWidth="16"
-            />
-            <circle
-              cx="80"
-              cy="80"
-              r="70"
-              fill="none"
-              stroke="#3D2B1F"
-              strokeWidth="16"
-              strokeDasharray={`${dash} ${circumference - dash}`}
-              strokeLinecap="round"
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-3xl font-bold">{pct}%</span>
-            <span className="text-[10px] tracking-wide text-[#8A8172] font-medium">
-              INFRASTRUCTURE
-            </span>
-          </div>
-        </div>
-      </div>
-    </ChartCard>
   );
 }
 
@@ -369,121 +212,6 @@ function OpenVsClosed() {
   );
 }
 
-/* ---------------- RES TIME TREND (line/area chart) ---------------- */
-
-function ResTimeTrend() {
-  return (
-    <ChartCard
-      title="Res. Time Trend"
-      action={<BarChart2 className="w-4 h-4 text-[#8A8172]" />}
-    >
-      <div className="h-40 mt-2">
-        <svg viewBox="0 0 300 100" className="w-full h-full" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#EFC98F" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#EFC98F" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M0,60 C30,80 60,80 90,55 C120,30 150,20 180,45 C210,70 240,80 270,50 C285,35 300,30 300,30 L300,100 L0,100 Z"
-            fill="url(#areaFill)"
-          />
-          <path
-            d="M0,60 C30,80 60,80 90,55 C120,30 150,20 180,45 C210,70 240,80 270,50 C285,35 300,30 300,30"
-            fill="none"
-            stroke="#3D2B1F"
-            strokeWidth="2"
-          />
-        </svg>
-      </div>
-      <div className="flex justify-between text-xs text-[#A39B8C] mt-2">
-        <span>00:00</span>
-        <span>08:00</span>
-        <span>16:00</span>
-        <span>23:59</span>
-      </div>
-    </ChartCard>
-  );
-}
-
-/* ---------------- AI INSIGHTS (right column) ---------------- */
-
-function AIInsights() {
-  return (
-    <div className="row-span-2 bg-white border border-[#E9E2D4] rounded-xl p-5 flex flex-col gap-4">
-      <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-lg bg-[#FBEFDB] flex items-center justify-center">
-          <Sparkles className="w-4 h-4 text-[#3D2B1F]" />
-        </div>
-        <h3 className="font-semibold">AI Insights</h3>
-      </div>
-
-      <InsightCard
-        eyebrow="TOP RECURRING ISSUE"
-        title="Database Latency (Region US-East)"
-        body="AI detected a 14% efficiency loss due to redundant query patterns in Postgres clusters."
-      />
-
-      <InsightCard
-        eyebrow="MOST SUCCESSFUL REPAIR"
-        title="Auto-scaling Adjustment"
-        body="Applied to 14 Kubernetes nodes. Resulted in 0 downtime during the peak traffic window."
-      />
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-[#FBF3EA] rounded-lg p-3">
-          <p className="text-[10px] tracking-wide text-[#8A8172] font-medium mb-1">
-            AFFECTED REGION
-          </p>
-          <p className="text-lg font-bold leading-tight">EMEA-West</p>
-        </div>
-        <div className="bg-[#F3A93C] rounded-lg p-3">
-          <p className="text-[10px] tracking-wide text-[#5A4321] font-medium mb-1">
-            AI CONFIDENCE
-          </p>
-          <p className="text-lg font-bold leading-tight text-[#3D2B1F]">
-            94.2%
-          </p>
-        </div>
-      </div>
-
-      <div className="border-t border-[#E9E2D4] pt-4">
-        <p className="text-sm font-semibold mb-3">System Health Monitoring</p>
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-xs text-[#6B6357] mb-1">
-              Node Sync <span className="float-right text-[#2E7D32]">Active</span>
-            </p>
-            <div className="h-1 rounded-full bg-[#3D2B1F] w-full" />
-          </div>
-          <div>
-            <p className="text-xs text-[#6B6357] mb-1">
-              API Gateway <span className="float-right text-[#2E7D32]">Stable</span>
-            </p>
-            <div className="h-1 rounded-full bg-[#3D2B1F] w-full" />
-          </div>
-        </div>
-        <button className="w-full border border-[#E9E2D4] rounded-md py-2.5 text-sm font-medium hover:bg-[#F0EAE0] transition">
-          Deep Analysis Mode
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function InsightCard({ eyebrow, title, body }) {
-  return (
-    <div className="bg-[#FBF3EA] rounded-lg p-4">
-      <p className="text-[10px] tracking-wide text-[#B8860B] font-semibold mb-1.5">
-        {eyebrow}
-      </p>
-      <p className="text-sm font-semibold mb-1.5">{title}</p>
-      <p className="text-xs text-[#8A8172] leading-relaxed">{body}</p>
-    </div>
-  );
-}
-
 /* ---------------- SHARED CHART CARD WRAPPER ---------------- */
 
 function ChartCard({ title, action, children, titleWrap }) {
@@ -499,8 +227,6 @@ function ChartCard({ title, action, children, titleWrap }) {
     </div>
   );
 }
-
-/* ---------------- RECENT ACTIVITY TABLE ---------------- */
 
 function RecentActivity() {
   const rows = [
