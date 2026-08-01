@@ -2,11 +2,17 @@
 
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { saveToken } from "@/lib/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
+  const router = useRouter();
+const [error,setError]=useState("");
+const [loading,setLoading]=useState(false);
+
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#F7F3ED] px-4 py-10">
@@ -35,10 +41,84 @@ export default function LoginPage() {
 
               <form
                 className="space-y-5"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  // handle sign in
-                }}
+                onSubmit={async (e) => {
+
+    e.preventDefault();
+
+    try {
+
+        setLoading(true);
+        setError("");
+
+        console.log("Sending login");
+
+        const response = await fetch(
+            "http://127.0.0.1:5000/auth/login",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                },
+
+                body: JSON.stringify({
+                    email,
+                    password,
+                }),
+            }
+        );
+
+        console.log(response);
+
+
+        const data = await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.error || "Login failed"
+            );
+
+        }
+
+
+        // Save JWT token
+        saveToken(data.token);
+
+
+        // Redirect based on role
+
+        if(data.user.role === "admin"){
+
+    router.push("/dashboard");
+
+}
+else if(data.user.role === "technician"){
+
+    router.push("/technicianDashboard");
+
+}
+else{
+
+    throw new Error("Invalid user role");
+
+}
+
+
+    }
+    catch(err){
+
+        setError(err.message);
+
+    }
+    finally{
+
+        setLoading(false);
+
+    }
+
+}}
               >
                 <div>
                   <label
@@ -94,11 +174,19 @@ export default function LoginPage() {
                   </span>
                 </label>
 
+                {
+error && (
+    <p className="text-red-500 text-sm text-center">
+        {error}
+    </p>
+)
+}
+
                 <button
                   type="submit"
                   className="w-full flex items-center justify-center gap-2 rounded-md bg-[#3D2B1F] hover:bg-[#2B1D14] transition text-white text-sm font-medium py-2.5"
                 >
-                  Sign In
+                  {loading ? "Signing In..." : "Sign In"}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </form>
