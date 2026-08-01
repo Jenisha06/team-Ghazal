@@ -6,54 +6,77 @@ export const login = async (req, res) => {
 
     try {
 
-        const { email, password } = req.body;
+        const {
+
+            email,
+
+            password
+
+        } = req.body;
 
         if (!email || !password) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "Email and Password are required"
+
+                message: "Email and Password required"
+
             });
 
         }
 
-        // Find user
-        const { data: user, error } = await supabase
+        const {
+
+            data: user,
+
+            error
+
+        } = await supabase
+
             .from("users")
+
             .select("*")
+
             .eq("email", email)
+
             .single();
 
         if (error || !user) {
 
             return res.status(401).json({
+
                 success: false,
+
                 message: "Invalid Credentials"
+
             });
 
         }
 
-        // Compare Password
-
         const isMatch = await comparePassword(
+
             password,
+
             user.password
+
         );
 
         if (!isMatch) {
 
             return res.status(401).json({
+
                 success: false,
+
                 message: "Invalid Credentials"
+
             });
 
         }
 
-        // Generate JWT
-
         const token = generateToken(user);
 
-        res.status(200).json({
+        return res.status(200).json({
 
             success: true,
 
@@ -73,15 +96,15 @@ export const login = async (req, res) => {
 
         });
 
-    } catch (err) {
+    }
 
-        console.log(err);
+    catch (err) {
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
 
-            message: "Server Error"
+            error: err.message
 
         });
 

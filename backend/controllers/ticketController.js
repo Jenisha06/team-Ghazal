@@ -1,90 +1,43 @@
 import { supabase } from "../config/supabase.js";
-
-export const getTickets = async (req, res) => {
-
-    const { data, error } = await supabase
-        .from("tickets")
-        .select("*");
-
-    if (error) {
-        return res.status(500).json({
-            error: error.message
-        });
-    }
-
-    res.json(data);
-
-};
-
-export const getTicket = async (req, res) => {
-
-    const { ticket_id } = req.params;
-
-    const { data, error } = await supabase
-        .from("tickets")
-        .select("*")
-        .eq("ticket_id", ticket_id)
-        .single();
-
-    if (error) {
-
-        return res.status(404).json({
-
-            error: "Ticket not found"
-
-        });
-
-    }
-
-    res.json(data);
-
-};
-
-export const createTicket = async (req, res) => {
-
-    const ticket = req.body;
-
-    const { data, error } = await supabase
-        .from("tickets")
-        .insert(ticket)
-        .select();
-
-    if (error) {
-
-        return res.status(500).json({
-
-            error: error.message
-
-        });
-
-    }
-
-    res.status(201).json(data);
-
-};
+import { analyzeCurrentTicket } from "./aiController.js";
 
 export const updateTicket = async (req, res) => {
 
     const { ticket_id } = req.params;
 
-    const updates = req.body;
+    const { technician_notes } = req.body;
 
+    // Update technician notes and automatically close the ticket
     const { data, error } = await supabase
         .from("tickets")
-        .update(updates)
+        .update({
+            technician_notes,
+            status: "Closed"
+        })
         .eq("ticket_id", ticket_id)
-        .select();
+        .select()
+        .single();
 
     if (error) {
 
         return res.status(500).json({
-
+            success: false,
             error: error.message
-
         });
 
     }
 
-    res.json(data);
+    // Trigger AI Analysis
+    await analyzeCurrentTicket(ticket_id);
+
+    return res.status(200).json({
+
+        success: true,
+
+        message: "Ticket completed successfully.",
+
+        data
+
+    });
 
 };

@@ -1,151 +1,103 @@
-export const analyzeCurrentTicket = async (req, res) => {
+import { supabase } from "../config/supabase.js";
+import analyzeTicket from "../services/aiService.js";
 
-    pp.post("/analyze/:ticket_id", async (req, res) => {
+export const analyzeCurrentTicket = async (ticket_id) => {
 
-        const { ticket_id } = req.params;
+    // Fetch current ticket
+    const { data: ticket, error } = await supabase
+        .from("tickets")
+        .select("*")
+        .eq("ticket_id", ticket_id)
+        .single();
 
+    if (error || !ticket) {
+        throw new Error("Ticket not found");
+    }
 
-        // Fetch current ticket
-        const { data: ticket, error } = await supabase
+    // Extract keywords from issue
+    const searchKeyword = ticket.issue
+        .split(" ")
+        .slice(0, 3)
+        .join(" ");
+
+    // Find similar historical tickets
+    const { data: historicalTickets, error: historyError } =
+        await supabase
             .from("tickets")
             .select("*")
-            .eq("ticket_id", ticket_id)
-            .single();
+            .ilike("issue", `%${searchKeyword}%`)
+            .limit(10);
 
+    if (historyError) {
+        throw new Error(historyError.message);
+    }
 
-        if (error) {
-            return res.status(404).json({
-                error: "Ticket not found"
-            });
-        }
+    // Remove current ticket
+    const similarTickets = historicalTickets.filter(
+        item => item.ticket_id !== ticket.ticket_id
+    );
 
+    const similarCount = similarTickets.length;
 
-        try {
+    // Run AI
+    const aiResponse = await analyzeTicket(
+        ticket,
+        similarTickets
+    );
 
-            // Extract keywords from issue
-            const searchKeyword = ticket.issue
-                .split(" ")
-                .slice(0, 3)
-                .join(" ");
+    const analysis = JSON.parse(aiResponse);
 
-            // Find similar historical tickets
-            const { data: historicalTickets, error: historyError } = await supabase
-                .from("tickets")
-                .select("*")
-                .ilike("issue", `%${searchKeyword}%`)
-                .limit(10);
+    // Save analysis
+    const { error: saveError } = await supabase
+        .from("ai_analysis")
+        .insert({
 
+            ticket_id: ticket.ticket_id,
 
+            root_cause: analysis.root_cause,
 
-            if (historyError) {
-                return res.status(500).json({
-                    error: historyError.message
-                });
-            }
+            repair_method: analysis.repair_method,
 
+            repair_type: analysis.repair_type,
 
+            confidence_score: analysis.confidence_score,
 
-            // Remove current ticket from results
-            const similarTickets = historicalTickets.filter(
-                item => item.ticket_id !== ticket.ticket_id
-            );
+            preventive_action: analysis.preventive_action,
 
+            historical_pattern: analysis.historical_pattern,
 
+            recommended_fix: analysis.recommended_fix,
 
-            const similarCount = similarTickets.length;
+            similar_tickets_found: similarCount
 
-            // Send ticket + history to AI
-            const aiResponse = await analyzeTicket(
-                ticket,
-                similarTickets
-            );
+        });
 
+    if (saveError) {
+        throw new Error(saveError.message);
+    }
 
-            // Convert AI response to JSON
-            const analysis = JSON.parse(aiResponse);
+    return {
 
+        ticket_id: ticket.ticket_id,
 
+        similar_tickets_found: similarCount,
 
-            // Save AI analysis into Supabase
-            const { error: saveError } = await supabase
-                .from("ai_analysis")
-                .insert({
+        analysis_saved: true,
 
-                    ticket_id: ticket.ticket_id,
+        historical_tickets: similarTickets.map(item => ({
 
-                    root_cause: analysis.root_cause,
+            ticket_id: item.ticket_id,
 
-                    repair_method: analysis.repair_method,
+            issue: item.issue,
 
-                    repair_type: analysis.repair_type,
+            root_cause: item.root_cause,
 
-                    confidence_score: analysis.confidence_score,
+            repair_method: item.repair_method
 
-                    preventive_action: analysis.preventive_action,
+        })),
 
-                    historical_pattern: analysis.historical_pattern,
-                    recommended_fix: analysis.recommended_fix,
+        analysis
 
-                    similar_tickets_found: similarCount
+    };
 
-
-
-                });
-
-
-
-            if (saveError) {
-
-                return res.status(500).json({
-                    error: saveError.message
-                });
-
-            }
-
-            // Send response
-            res.json({
-
-                success: true,
-
-                ticket_id: ticket.ticket_id,
-
-                similar_tickets_found: similarCount,
-
-                analysis_saved: true,
-
-                historical_tickets: similarTickets.map(item => ({
-
-                    ticket_id: item.ticket_id,
-
-                    issue: item.issue,
-
-                    root_cause: item.root_cause,
-
-                    repair_method: item.repair_method
-
-                })),
-
-                analysis
-
-            });
-
-
-
-        } catch (err) {
-
-            res.status(500).json({
-
-                success: false,
-
-                error: err.message
-
-            });
-
-        }
-
-    });
-
-
-
-
-}
+};
