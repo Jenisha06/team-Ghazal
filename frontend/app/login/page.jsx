@@ -85,23 +85,15 @@ const [loading,setLoading]=useState(false);
       
 
 
-        // Redirect based on role
-
-        if(data.user.role === "admin"){
-
-    router.push("/dashboard");
-
-}
-else if(data.user.role === "technician"){
-
-    router.push("/technicianDashboard");
-
-}
-else{
-
-    throw new Error("Invalid user role");
-
-}
+        // Redirect based on role (Case-insensitive RBAC)
+        const userRole = data.user?.role?.toLowerCase();
+        if (userRole === "admin") {
+          router.push("/dashboard");
+        } else if (userRole === "technician") {
+          router.push("/technicianDashboard");
+        } else {
+          throw new Error("Unauthorized role. Access restricted.");
+        }
 
 
     }

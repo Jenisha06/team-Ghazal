@@ -1,25 +1,50 @@
-import {getUser} from "./auth";
+import { getUser } from "./auth";
 
+/**
+ * Client-Side Protection Guard for Admin Dashboard & Admin Routes.
+ * Verifies JWT token existence and checks whether the user's role is "admin".
+ * Redirects unauthorized or non-admin users to the /login page.
+ */
+export function requireAdmin() {
+    const user = getUser();
 
-export function requireTechnician(){
-
-    const user=getUser();
-
-
-    if(!user)
-    {
-        window.location.href="/login";
+    if (!user) {
+        if (typeof window !== "undefined") {
+            window.location.href = "/login";
+        }
         return null;
     }
 
-
-    if(user.role !== "TECHNICIAN")
-    {
-        window.location.href="/dashboard";
+    // Role-Based Access Control (RBAC): Admin Role Check (Case-insensitive)
+    if (!user.role || user.role.toLowerCase() !== "admin") {
+        if (typeof window !== "undefined") {
+            window.location.href = "/login";
+        }
         return null;
     }
-
 
     return user;
-
 }
+
+/**
+ * Client-Side Protection Guard for Technician Dashboard.
+ */
+export function requireTechnician() {
+    const user = getUser();
+
+    if (!user) {
+        if (typeof window !== "undefined") {
+            window.location.href = "/login";
+        }
+        return null;
+    }
+
+    if (!user.role || user.role.toLowerCase() !== "technician") {
+        if (typeof window !== "undefined") {
+            window.location.href = "/login";
+        }
+        return null;
+    }
+
+    return user;
+}
