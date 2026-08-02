@@ -1,49 +1,42 @@
-const API_URL = "http://localhost:5000";
+import { getToken } from "./auth";
 
+const API_URL = "http://localhost:5000";
 
 export async function apiRequest(
     endpoint,
-    options={}
-){
-
-    const token = localStorage.getItem("token");
-
+    options = {}
+) {
+    const token = getToken() || (typeof localStorage !== "undefined" ? localStorage.getItem("token") : null);
 
     const response = await fetch(
         `${API_URL}${endpoint}`,
         {
-
             ...options,
-
-            headers:{
-                "Content-Type":"application/json",
-
-                Authorization:`Bearer ${token}`,
-
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 ...options.headers
             }
-
         }
     );
-
 
     return response.json();
-
 }
 
-export async function apiFetch(url,options={}){
-
+export async function apiFetch(url, options = {}) {
+    const token = getToken();
 
     return fetch(
-        `http://localhost:5000${url}`,
+        `${API_URL}${url}`,
         {
             ...options,
-            credentials:"include",
-            headers:{
-                "Content-Type":"application/json",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 ...options.headers
             }
         }
     );
-
-}
+}

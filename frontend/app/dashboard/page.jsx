@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   LayoutDashboard,
   Cpu,
@@ -118,21 +119,18 @@ function TopNav({ user }) {
         </div>
 
         <nav className="flex items-center gap-8 text-sm text-[#6B6357]">
-          <a
+          <Link
             href="/dashboard"
             className="text-[#2B2118] font-medium border-b-2 border-[#2B2118] pb-5 -mb-5"
           >
             Dashboard
-          </a>
-          <a href="/analytics" className="hover:text-[#2B2118] transition">
-            Analytics
-          </a>
-          <a href="/tickets" className="hover:text-[#2B2118] transition">
+          </Link>
+          <Link href="/tickets" className="hover:text-[#2B2118] transition">
             Tickets
-          </a>
-          <a href="/security" className="hover:text-[#2B2118] transition">
-            Security
-          </a>
+          </Link>
+          <Link href="/analytics" className="hover:text-[#2B2118] transition">
+            Analytics
+          </Link>
         </nav>
       </div>
 
@@ -336,34 +334,38 @@ function StatCards({ tickets }) {
 }
 
 /**
- * Calculates Average Resolution Time from DB timestamps for closed tickets
+ * Calculates Average Resolution Time from DB tickets.
+ * Checks resolution_time column (integer) and calculates fallback duration from created_date.
  */
 function calculateAvgResolutionTime(tickets) {
-  const closedTickets = tickets.filter(
-    (t) => (t.status || "").toLowerCase() === "closed"
-  );
-
-  if (closedTickets.length === 0) return "--";
-
-  let totalMs = 0;
+  let totalMinutes = 0;
   let count = 0;
 
-  closedTickets.forEach((t) => {
-    if (t.created_at && t.updated_at) {
-      const created = new Date(t.created_at).getTime();
-      const updated = new Date(t.updated_at).getTime();
-      const diff = updated - created;
-
-      if (!isNaN(diff) && diff > 0) {
-        totalMs += diff;
-        count += 1;
+  tickets.forEach((t) => {
+    // 1. Direct resolution_time integer column from database schema
+    if (t.resolution_time != null && !isNaN(Number(t.resolution_time))) {
+      totalMinutes += Number(t.resolution_time);
+      count += 1;
+    } 
+    // 2. Fallback calculation if ticket is closed and has creation/update timestamps
+    else if ((t.status || "").toLowerCase() === "closed") {
+      const rawCreated = t.created_date || t.created_at;
+      const rawUpdated = t.updated_at || t.closed_at;
+      if (rawCreated && rawUpdated) {
+        const start = new Date(rawCreated).getTime();
+        const end = new Date(rawUpdated).getTime();
+        const diffMs = end - start;
+        if (!isNaN(diffMs) && diffMs > 0) {
+          totalMinutes += Math.round(diffMs / (1000 * 60));
+          count += 1;
+        }
       }
     }
   });
 
   if (count === 0) return "--";
 
-  const avgMinutes = Math.round(totalMs / count / (1000 * 60));
+  const avgMinutes = Math.round(totalMinutes / count);
   if (avgMinutes >= 60) {
     const hours = (avgMinutes / 60).toFixed(1);
     return `${hours}h`;
@@ -382,8 +384,9 @@ function OpenVsClosed({ tickets }) {
   });
 
   tickets.forEach((ticket) => {
-    if (!ticket.created_at) return;
-    const date = new Date(ticket.created_at);
+    const rawDate = ticket.created_date || ticket.created_at;
+    if (!rawDate) return;
+    const date = new Date(rawDate);
     // getDay(): 0 = Sun, 1 = Mon ... 6 = Sat
     const dayIndex = (date.getDay() + 6) % 7; // Map Mon=0 ... Sun=6
     const dayName = daysOfWeek[dayIndex];
@@ -482,9 +485,13 @@ function ChartCard({ title, action, children }) {
 /* ---------------- RECENT ACTIVITY TABLE (Dynamic DB Data) ---------------- */
 
 function RecentActivity({ tickets }) {
-  // Sort tickets by created_at descending and get top 5
+  // Sort tickets by created_date/created_at descending and get top 5
   const recentTickets = [...tickets]
-    .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+    .sort((a, b) => {
+      const dateA = new Date(a.created_date || a.created_at || 0).getTime();
+      const dateB = new Date(b.created_date || b.created_at || 0).getTime();
+      return dateB - dateA;
+    })
     .slice(0, 5);
 
   const statusStyleMap = {
@@ -524,8 +531,9 @@ function RecentActivity({ tickets }) {
                 const badgeStyle =
                   statusStyleMap[statusKey] || "bg-[#F0EAE0] text-[#6B6357]";
 
-                const formattedDate = ticket.created_at
-                  ? new Date(ticket.created_at).toLocaleDateString("en-US", {
+                const rawDate = ticket.created_date || ticket.created_at;
+                const formattedDate = rawDate
+                  ? new Date(rawDate).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",

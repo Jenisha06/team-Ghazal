@@ -27,7 +27,7 @@ import { requireAdmin } from "@/lib/protectedRoute";
 import { logout } from "@/lib/auth";
 
 /**
- * Ticket Detail Content Component
+ * Admin Ticket Detail Content Component
  * Wrapped inside Suspense boundary for Next.js App Router query parameter reading.
  */
 function TicketDetailContent() {
@@ -49,6 +49,8 @@ function TicketDetailContent() {
       setUser(currentUser);
     }
   }, []);
+
+  const backLink = "/tickets";
 
   // 2. Fetch Ticket Details from Existing Backend API Endpoint (GET /tickets/:ticket_id)
   const fetchTicketDetails = useCallback(async () => {
@@ -118,10 +120,10 @@ function TicketDetailContent() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <Link
-              href="/tickets"
+              href={backLink}
               className="flex items-center gap-1 text-xs font-semibold text-[#6B6357] hover:text-[#2B2118] transition bg-white border border-[#E9E2D4] px-3 py-1.5 rounded-md"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to Tickets
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
             </Link>
             <ChevronRight className="w-3.5 h-3.5 text-[#A39B8C]" />
             <span className="text-xs font-semibold bg-[#EDE6D8] text-[#3D2B1F] px-3 py-1 rounded-full uppercase">
@@ -218,8 +220,8 @@ function TicketDetailContent() {
                 <Field
                   label="CREATED DATE"
                   value={
-                    ticket.created_at
-                      ? new Date(ticket.created_at).toLocaleString("en-US", {
+                    (ticket.created_date || ticket.created_at)
+                      ? new Date(ticket.created_date || ticket.created_at).toLocaleString("en-US", {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
@@ -229,7 +231,7 @@ function TicketDetailContent() {
                       : "--"
                   }
                 />
-                <Field label="RESOLUTION TIME" value={resolutionTime} />
+                <Field label="RESOLUTION TIME" value={calculateResolutionTime(ticket)} />
               </div>
 
               {/* Issue Description */}
@@ -338,12 +340,6 @@ function TopNav({ user }) {
           >
             Analytics
           </Link>
-          <Link
-            href="/security"
-            className="text-[#6B6357] hover:text-[#2B2118] transition"
-          >
-            Security
-          </Link>
         </nav>
       </div>
 
@@ -412,14 +408,28 @@ function Field({ label, value }) {
 /**
  * Helper to compute ticket resolution duration
  */
-function calculateResolutionTime(createdAt, updatedAt, status) {
-  if ((status || "").toLowerCase() !== "closed") {
+function calculateResolutionTime(ticket) {
+  if (!ticket) return "--";
+
+  // 1. Direct resolution_time integer column from database schema (e.g. 15 for 15 mins)
+  if (ticket.resolution_time != null && !isNaN(Number(ticket.resolution_time))) {
+    const mins = Number(ticket.resolution_time);
+    if (mins >= 60) {
+      return `${(mins / 60).toFixed(1)} hrs`;
+    }
+    return `${mins} mins`;
+  }
+
+  if ((ticket.status || "").toLowerCase() !== "closed") {
     return "In Progress";
   }
 
-  if (createdAt && updatedAt) {
-    const start = new Date(createdAt).getTime();
-    const end = new Date(updatedAt).getTime();
+  const rawCreated = ticket.created_date || ticket.created_at;
+  const rawUpdated = ticket.updated_at || ticket.closed_at;
+
+  if (rawCreated && rawUpdated) {
+    const start = new Date(rawCreated).getTime();
+    const end = new Date(rawUpdated).getTime();
     const diffMs = end - start;
 
     if (!isNaN(diffMs) && diffMs > 0) {
@@ -432,7 +442,7 @@ function calculateResolutionTime(createdAt, updatedAt, status) {
     }
   }
 
-  return "3m 15s";
+  return "--";
 }
 
 /**

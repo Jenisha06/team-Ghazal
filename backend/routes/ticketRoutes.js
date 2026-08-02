@@ -26,6 +26,7 @@ router.get("/:ticket_id", verifyToken, getTicket);
 
 router.post("/", createTicket);
 
-router.patch("/:ticket_id", updateTicket);
+router.put("/:ticket_id", verifyToken, updateTicket);
+router.patch("/:ticket_id", verifyToken, updateTicket);
 
 export default router;

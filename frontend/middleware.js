@@ -15,67 +15,48 @@ export function middleware(request) {
     const token = request.cookies.get("token")?.value;
     const { pathname } = request.nextUrl;
 
-    // Define admin route paths requiring ADMIN role
-    const isAdminRoute = 
+    // 1. Admin-Only Routes (/dashboard, /tickets, /analytics, /ticketDetails, /aiEngine)
+    const isAdminOnlyRoute = 
         pathname.startsWith("/dashboard") ||
-        pathname.startsWith("/analytics") ||
         pathname.startsWith("/tickets") ||
-        pathname.startsWith("/aiEngine") ||
-        pathname.startsWith("/security");
+        pathname.startsWith("/analytics") ||
+        pathname.startsWith("/ticketDetails") ||
+        pathname.startsWith("/aiEngine");
 
-    // Protect Admin Dashboard & Admin Pages
-    if (isAdminRoute) {
-        // If JWT token is missing, block access and redirect to login page
+    if (isAdminOnlyRoute) {
         if (!token) {
-            return NextResponse.redirect(
-                new URL("/login", request.url)
-            );
+            return NextResponse.redirect(new URL("/login", request.url));
         }
 
         try {
-            // Decode JWT token payload
             const user = jwtDecode(token);
-
-            // Role-Based Access Control (RBAC): Ensure role is "admin" (case-insensitive)
             if (!user.role || user.role.toLowerCase() !== "admin") {
-                // Non-admin user (e.g. technician, driver, fleet manager) -> Redirect to login
-                return NextResponse.redirect(
-                    new URL("/login", request.url)
-                );
+                return NextResponse.redirect(new URL("/login", request.url));
             }
         } catch (err) {
-            // Token expired or invalid -> Redirect to login
-            return NextResponse.redirect(
-                new URL("/login", request.url)
-            );
+            return NextResponse.redirect(new URL("/login", request.url));
         }
     }
 
-    // Protect Technician Dashboard
-    const isTechnicianRoute = 
+    // 2. Technician-Only Routes (/technicianDashboard, /technicianTickets, /technicianTicketDetails)
+    const isTechnicianOnlyRoute = 
         pathname.startsWith("/technicianDashboard") ||
+        pathname.startsWith("/technicianTickets") ||
+        pathname.startsWith("/technicianTicketDetails") ||
         pathname.startsWith("/technician/dashboard");
 
-    if (isTechnicianRoute) {
+    if (isTechnicianOnlyRoute) {
         if (!token) {
-            return NextResponse.redirect(
-                new URL("/login", request.url)
-            );
+            return NextResponse.redirect(new URL("/login", request.url));
         }
 
         try {
             const user = jwtDecode(token);
-
-            // Ensure role is "technician" (case-insensitive)
             if (!user.role || user.role.toLowerCase() !== "technician") {
-                return NextResponse.redirect(
-                    new URL("/login", request.url)
-                );
+                return NextResponse.redirect(new URL("/login", request.url));
             }
         } catch (err) {
-            return NextResponse.redirect(
-                new URL("/login", request.url)
-            );
+            return NextResponse.redirect(new URL("/login", request.url));
         }
     }
 
@@ -87,9 +68,11 @@ export const config = {
         "/dashboard/:path*",
         "/analytics/:path*",
         "/tickets/:path*",
+        "/ticketDetails/:path*",
         "/aiEngine/:path*",
-        "/security/:path*",
         "/technicianDashboard/:path*",
+        "/technicianTickets/:path*",
+        "/technicianTicketDetails/:path*",
         "/technician/dashboard/:path*"
     ]
 };

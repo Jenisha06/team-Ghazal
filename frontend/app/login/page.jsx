@@ -3,15 +3,15 @@
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { saveToken } from "@/lib/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const router = useRouter();
-const [error,setError]=useState("");
-const [loading,setLoading]=useState(false);
-
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#F7F3ED] px-4 py-10">
@@ -41,74 +41,53 @@ const [loading,setLoading]=useState(false);
               <form
                 className="space-y-5"
                 onSubmit={async (e) => {
+                  e.preventDefault();
 
-    e.preventDefault();
+                  try {
+                    setLoading(true);
+                    setError("");
 
-    try {
+                    const response = await fetch(
+                      "http://localhost:5000/auth/login",
+                      {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                          email,
+                          password,
+                        }),
+                      }
+                    );
 
-        setLoading(true);
-        setError("");
+                    const data = await response.json();
 
-        console.log("Sending login");
+                    if (!response.ok) {
+                      throw new Error(data.message || data.error || "Invalid login credentials");
+                    }
 
-        const response = await fetch(
-            "http://127.0.0.1:5000/auth/login",
-            {
-                method: "POST",
+                    // Save token to document.cookie (path=/)
+                    if (data.token) {
+                      saveToken(data.token);
+                    }
 
-                headers: {
-                    "Content-Type": "application/json",
-                },
-
-                body: JSON.stringify({
-                    email,
-                    password,
-                }),
-            }
-        );
-
-        console.log(response);
-
-
-        const data = await response.json();
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                data.error || "Login failed"
-            );
-
-        }
-
-
-      
-
-
-        // Redirect based on role (Case-insensitive RBAC)
-        const userRole = data.user?.role?.toLowerCase();
-        if (userRole === "admin") {
-          router.push("/dashboard");
-        } else if (userRole === "technician") {
-          router.push("/technicianDashboard");
-        } else {
-          throw new Error("Unauthorized role. Access restricted.");
-        }
-
-
-    }
-    catch(err){
-
-        setError(err.message);
-
-    }
-    finally{
-
-        setLoading(false);
-
-    }
-
-}}
+                    // Redirect based on role (Case-insensitive RBAC)
+                    const userRole = data.user?.role?.toLowerCase();
+                    if (userRole === "admin") {
+                      router.push("/dashboard");
+                    } else if (userRole === "technician") {
+                      router.push("/technicianDashboard");
+                    } else {
+                      throw new Error("Unauthorized user role");
+                    }
+                  } catch (err) {
+                    setError(err.message);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
               >
                 <div>
                   <label

@@ -28,10 +28,10 @@ import { logout } from "@/lib/auth";
  * Admin Ticket Management Page Component
  * 
  * Flow:
- * 1. Checks JWT token & verifies ADMIN role via requireAdmin() client-side guard.
- * 2. Fetches real ticket data from existing backend API endpoint (GET /tickets).
+ * 1. Checks JWT token & verifies ADMIN role via requireAdmin() guard.
+ * 2. Fetches all ticket records from backend API (GET /tickets).
  * 3. Handles Loading, Error, Empty, and Filtered Data states.
- * 4. Maps database fields dynamically to UI components without modifying UI layout.
+ * 4. Renders Admin Top Navigation bar and full filter controls.
  */
 export default function TicketManagementPage() {
   const [tickets, setTickets] = useState([]);
@@ -45,10 +45,8 @@ export default function TicketManagementPage() {
   const [searchIssue, setSearchIssue] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
-  // 1. Client-Side Authentication & Role Guard (ADMIN check)
+  // 1. Client-Side Authentication Guard (ADMIN check)
   useEffect(() => {
-    // requireAdmin checks JWT token cookie & role === "admin"
-    // Redirects to /login if token is missing, invalid, or non-admin
     const currentUser = requireAdmin();
     if (currentUser) {
       setUser(currentUser);
@@ -61,7 +59,6 @@ export default function TicketManagementPage() {
       setLoading(true);
       setError(null);
 
-      // Existing API Route call: GET /tickets (protected by verifyToken)
       const res = await apiFetch("/tickets");
 
       if (res.status === 401 || res.status === 403) {
@@ -169,12 +166,6 @@ function TopNav({ user }) {
             className="text-[#6B6357] hover:text-[#2B2118] transition"
           >
             Analytics
-          </Link>
-          <Link
-            href="/security"
-            className="text-[#6B6357] hover:text-[#2B2118] transition"
-          >
-            Security
           </Link>
         </nav>
       </div>
@@ -433,16 +424,17 @@ function TicketsTable({ tickets, totalCount }) {
               const badgeStyle =
                 statusStyleMap[statusKey] || "bg-[#F0EAE0] text-[#6B6357]";
 
-              const formattedDate = t.created_at
-                ? new Date(t.created_at).toLocaleDateString("en-US", {
+              const rawDate = t.created_date || t.created_at;
+              const formattedDate = rawDate
+                ? new Date(rawDate).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
                     year: "numeric",
                   })
-                : "Jan 24, 2024";
+                : "--";
 
               const displayAtmId = t.atm_id || (t.ticket_id ? `ATM-SYS-${t.ticket_id}` : "ATM-NYC-402");
-              const displayEngineer = t.engineer_id || "Unassigned";
+              const displayEngineer = t.engineer_id != null ? t.engineer_id : (t.engineer || "Unassigned");
 
               return (
                 <tr key={t.ticket_id} className="border-b border-[#F0EAE0] last:border-0 hover:bg-[#FBF7F1]/50 transition">
@@ -495,7 +487,7 @@ function TicketsTable({ tickets, totalCount }) {
 
       <div className="flex items-center justify-between px-6 py-4 border-t border-[#E9E2D4]">
         <p className="text-sm text-[#8A8172]">
-          Showing {tickets.length} of {totalCount} tickets
+          Showing {tickets.length} of {totalCount} total tickets
         </p>
         <Pagination count={tickets.length} />
       </div>

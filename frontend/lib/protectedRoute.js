@@ -47,4 +47,30 @@ export function requireTechnician() {
     }
 
     return user;
-}
+}
+
+/**
+ * Client-Side Protection Guard for Shared Routes (/tickets, /ticketDetails).
+ * Allows access if a valid JWT exists for either "admin" or "technician" roles.
+ */
+export function requireAuth() {
+    const user = getUser();
+
+    if (!user) {
+        if (typeof window !== "undefined") {
+            window.location.href = "/login";
+        }
+        return null;
+    }
+
+    const role = (user.role || "").toLowerCase();
+    if (role !== "admin" && role !== "technician") {
+        if (typeof window !== "undefined") {
+            window.location.href = "/login";
+        }
+        return null;
+    }
+
+    return user;
+}
+

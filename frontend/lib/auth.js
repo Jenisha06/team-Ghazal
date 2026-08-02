@@ -47,13 +47,14 @@ export function getUser(){
 
 
 
-// Logout
-export function logout(){
-
-    document.cookie =
-    "token=; path=/; max-age=0";
-
-
-    window.location.href="/login";
-
+// Save JWT to cookie
+export function saveToken(token) {
+    if (!token) return;
+    document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
 }
+
+// Logout
+export function logout() {
+    document.cookie = "token=; path=/; max-age=0";
+    window.location.href = "/login";
+}
