@@ -7,27 +7,36 @@
 **Repository**: `team-Ghazal`  
 **Purpose**: OpsMemory AI is an enterprise AI-powered operational memory platform designed for maintenance ticketing, incident management, and automated AI analysis. It captures technician notes from completed tickets, analyzes historical patterns using an on-premise/local LLM (Ollama / Llama 3.1), and generates root cause diagnoses, repair methods, preventive actions, and recommendations.
 
-### Core Incident Lifecycle:
+### Core Incident & Dual-Phase AI Lifecycle:
 ```
-System Incident / Monitoring
-            │
-            ▼
-    Ticket Created (POST /tickets)
-            │
-            ▼
-    Assigned to Engineer / Technician
-            │
-            ▼
-    Technician Performs Repair & Enters Notes (PATCH /tickets/:ticket_id)
-            │
-            ▼
-    Ticket Status -> "Closed"
-            │
-            ▼
-    AI Analysis Triggered (POST /analyze/:ticket_id via Ollama & Redis Cache)
-            │
-            ▼
-    Knowledge Saved (ai_analysis Supabase Table) & Displayed on Dashboard
+                System Incident / Monitoring
+                             │
+                             ▼
+               Ticket Created (Status = "Open")
+                             │
+                             ▼
+         Phase 1: Predictive AI Recommendation
+ (AI scans past CLOSED tickets & presents Suggested Fix)
+                             │
+                             ▼
+           Assigned to Engineer / Technician
+                             │
+                             ▼
+         Technician Work & Notes Entry (Status = "In Progress")
+                             │
+                             ▼
+      Technician Submits Completion (Status = "Closed")
+                             │
+                             ▼
+               Database Lock & Resolution Time
+       (resolution_time calculated; DB locked against edits)
+                             │
+                             ▼
+         Phase 2: Knowledge Base Enrichment
+  (AI extracts root_cause, repair_method, & preventive_action)
+                             │
+                             ▼
+  Saved to tickets & ai_analysis tables as Permanent Historic Knowledge
 ```
 
 ---
@@ -37,7 +46,7 @@ System Incident / Monitoring
 ### Frontend
 - **Framework**: Next.js 16 (App Router)
 - **UI Library**: React, Lucide React Icons
-- **Styling**: Tailwind CSS
+- **Styling**: Vanilla CSS with Tailwind CSS tokens
 - **Authentication Helpers**: `jwt-decode`, cookie storage (`token`)
 
 ### Backend
@@ -50,7 +59,7 @@ System Incident / Monitoring
 - **Provider**: Supabase PostgreSQL
 - **Key Tables**:
   - `users`: User identity, hashed passwords, roles (`admin`, `technician`), `engineer_id`
-  - `tickets`: Incident records (`ticket_id`, `atm_id`, `issue`, `status`, `engineer_id`, `technician_notes`, `location`, `asset_model`, `created_at`, `updated_at`)
+  - `tickets`: Incident records (`ticket_id`, `atm_id`, `issue`, `status`, `engineer_id`, `engineer`, `technician_notes`, `resolution_time`, `root_cause`, `repair_method`, `repair_type`, `preventive_action`, `location`, `asset_model`, `created_date`)
   - `ai_analysis`: Stored AI insights (`ticket_id`, `root_cause`, `repair_method`, `repair_type`, `confidence_score`, `preventive_action`, `historical_pattern`, `recommended_fix`, `similar_tickets_found`)
 
 ### AI Pipeline
@@ -70,15 +79,15 @@ team-Ghazal/
 │   ├── controllers/
 │   │   ├── aiController.js     # Orchestrates ticket retrieval, similarity search, Redis cache, Ollama call, & DB save
 │   │   ├── authController.js   # Login endpoint logic, password verification, & JWT cookie generation
-│   │   └── ticketController.js # CRUD handlers for tickets (getTickets, getTicket, createTicket, updateTicket)
+│   │   └── ticketController.js # CRUD handlers for tickets with status locking, resolution_time calculation & AI sync
 │   ├── middleware/
 │   │   ├── authMiddleware.js   # verifyToken Express middleware (validates req.cookies.token via JWT)
 │   │   └── roleMiddleware.js   # requireRole Express RBAC middleware (checks req.user.role)
 │   ├── routes/
 │   │   ├── aiRoutes.js         # POST /analyze/:ticket_id -> aiController.analyzeCurrentTicket
 │   │   ├── authRoutes.js       # POST /auth/login -> authController.login
-│   │   ├── technicianRoutes.js # GET /technician/tickets -> assigned tickets query
-│   │   └── ticketRoutes.js     # GET /tickets, GET /tickets/:id, POST /tickets, PATCH /tickets/:id
+│   │   ├── technicianRoutes.js # GET /technician/tickets -> assigned tickets query for logged-in technician
+│   │   └── ticketRoutes.js     # GET /tickets, GET /tickets/:id, POST /tickets, PUT/PATCH /tickets/:id
 │   ├── scripts/
 │   │   └── hashUsers.js        # Password migration script for bcrypt hashing
 │   ├── services/
@@ -95,26 +104,28 @@ team-Ghazal/
 │   │   ├── aiEngine/
 │   │   │   └── page.jsx        # AI Engine operational dashboard view
 │   │   ├── analytics/
-│   │   │   └── page.jsx        # Operational analytics & distribution insights
+│   │   │   └── page.jsx        # Admin Operational Analytics (Live DB metrics, standard TopNav: Dashboard | Tickets | Analytics)
 │   │   ├── dashboard/
 │   │   │   └── page.jsx        # Main Admin Dashboard (Live metrics, Open vs Closed chart, Recent Tickets)
 │   │   ├── login/
 │   │   │   └── page.jsx        # Login page (calls POST /auth/login, redirects by role)
-│   │   ├── security/
-│   │   │   └── page.jsx        # Enterprise security monitoring view
 │   │   ├── technicianDashboard/
-│   │   │   └── page.jsx        # Technician assigned workload view
+│   │   │   └── page.jsx        # Technician assigned workload overview & Technician TopNav
+│   │   ├── technicianTickets/
+│   │   │   └── page.jsx        # Technician assigned tickets list (GET /technician/tickets, simplified filters)
+│   │   ├── technicianTicketDetails/
+│   │   │   └── page.jsx        # Dedicated Technician Ticket Detail (Editable notes form, status toggle, DB lock badge)
 │   │   ├── ticketDetails/
-│   │   │   └── page.jsx        # Ticket Detail page (/ticketDetails?id=T0059) with full breakdown
+│   │   │   └── page.jsx        # Admin Ticket Detail (/ticketDetails?id=...) strictly protected by requireAdmin()
 │   │   ├── tickets/
-│   │   │   └── page.jsx        # Admin Ticket Management (Live API data & real-time filtering)
+│   │   │   └── page.jsx        # Admin Ticket Management (Full DB ticket dataset, 4-field filters, requireAdmin())
 │   │   ├── layout.js
 │   │   └── page.js             # OpsMemory AI landing page
 │   ├── lib/
 │   │   ├── api.js              # apiFetch() & apiRequest() HTTP helpers to http://localhost:5000
 │   │   ├── auth.js             # getToken(), getUser(), saveToken(), logout() cookie helpers
 │   │   └── protectedRoute.js   # requireAdmin() & requireTechnician() client guards
-│   ├── middleware.js           # Next.js Route Protection & RBAC Middleware (/dashboard, /tickets, /analytics)
+│   ├── middleware.js           # Next.js Route Protection & RBAC Middleware (/dashboard, /tickets, /analytics, /technicianDashboard, /technicianTickets, /technicianTicketDetails)
 │   ├── package.json
 │   └── AGENTS.md               # Architecture & Documentation Guide
 ```
@@ -132,25 +143,12 @@ team-Ghazal/
 - **Detailed Step-by-Step Logic**:
   1. Validates presence of `email` and `password`. Returns `400 Bad Request` if missing.
   2. Queries Supabase `users` table: `.from("users").select("*").eq("email", email).single()`.
-  3. Returns `401 Unauthorized` (`Invalid Credentials`) if user record does not exist or DB query errors out.
-  4. Compares plain text password against `user.password` stored in DB using `comparePassword(password, user.password)` (bcrypt comparison).
+  3. Returns `401 Unauthorized` (`Invalid Credentials`) if user record does not exist.
+  4. Compares plain text password against `user.password` stored in DB using `comparePassword(password, user.password)`.
   5. Returns `401 Unauthorized` (`Invalid Credentials`) if password comparison fails.
-  6. Generates a signed JWT token via `generateToken(user)` with payload `{ id, email, role, engineer_id }` and 24-hour expiration.
+  6. Generates a signed JWT token via `generateToken(user)` with payload `{ id, email, role, engineer_id }` and 24h expiration.
   7. Sets HTTP cookie `token` (`maxAge: 24h`, `sameSite: "lax"`, `httpOnly: false`).
-  8. Returns HTTP `200 OK` JSON response:
-     ```json
-     {
-       "success": true,
-       "token": "<jwt_token>",
-       "user": {
-         "id": "...",
-         "name": "...",
-         "email": "...",
-         "role": "admin|technician",
-         "engineer_id": "..."
-       }
-     }
-     ```
+  8. Returns HTTP `200 OK` JSON response containing token and user profile.
 
 ---
 
@@ -160,9 +158,9 @@ team-Ghazal/
 - **Route Handler**: `backend/routes/ticketRoutes.js` -> `backend/controllers/ticketController.js`
 - **Middleware**: `verifyToken` (`backend/middleware/authMiddleware.js`)
 - **Detailed Logic**:
-  1. Express middleware `verifyToken` checks `req.cookies.token`, decodes JWT via `jwt.verify(token, process.env.JWT_SECRET)`, and attaches `req.user`. Returns `401 Unauthorized` if token is missing or invalid.
+  1. Middleware `verifyToken` validates `req.cookies.token`.
   2. Executes Supabase query: `.from("tickets").select("*")`.
-  3. Returns `500 Internal Server Error` if DB fails, or returns JSON array of all ticket objects.
+  3. Returns JSON array of all database ticket objects across all engineers (used by Admin portal).
 
 #### `GET /tickets/:ticket_id`
 - **Route Handler**: `backend/routes/ticketRoutes.js` -> `backend/controllers/ticketController.js`
@@ -170,36 +168,22 @@ team-Ghazal/
 - **Parameters**: `ticket_id` (URL parameter, e.g. `T0059` or `1`)
 - **Detailed Logic**:
   1. Middleware verifies JWT token.
-  2. Extracts `ticket_id` from `req.params`.
-  3. Executes Supabase query: `.from("tickets").select("*").eq("ticket_id", ticket_id).single()`.
-  4. Returns `404 Not Found` (`Ticket not found`) if no record matches, or returns single ticket JSON object.
+  2. Queries Supabase: `.from("tickets").select("*").eq("ticket_id", ticket_id).single()`.
+  3. Returns single ticket JSON object or `404 Not Found`.
 
-#### `POST /tickets`
+#### `PUT /tickets/:ticket_id` & `PATCH /tickets/:ticket_id`
 - **Route Handler**: `backend/routes/ticketRoutes.js` -> `backend/controllers/ticketController.js`
-- **Authentication**: Public / System Ingestion
-- **Request Body**: Ticket object (`{ issue, atm_id, location, engineer_id, ... }`)
-- **Detailed Logic**:
-  1. Reads ticket payload from `req.body`.
-  2. Inserts new record into Supabase `tickets` table: `.from("tickets").insert(ticket).select()`.
-  3. Returns `500` on error, or `201 Created` with inserted ticket data.
-
-#### `PATCH /tickets/:ticket_id`
-- **Route Handler**: `backend/routes/ticketRoutes.js` -> `backend/controllers/ticketController.js`
-- **Parameters**: `ticket_id`
-- **Request Body**: `{ technician_notes }`
-- **Detailed Logic**:
-  1. Updates Supabase record: `.from("tickets").update({ technician_notes, status: "Closed" }).eq("ticket_id", ticket_id).select().single()`.
-  2. If DB error occurs, returns `500 Internal Server Error`.
-  3. Triggers AI Analysis asynchronously via `analyzeCurrentTicket(ticket_id)` from `aiController.js`.
-  4. Returns HTTP `200 OK` JSON response:
-     ```json
-     {
-       "success": true,
-       "message": "Ticket completed successfully.",
-       "data": { ...updatedTicket },
-       "analysis": { ...aiAnalysisResult }
-     }
-     ```
+- **Middleware**: `verifyToken`
+- **Request Body**: `{ technician_notes, status }`
+- **Detailed Logic & DB Lock Enforcement**:
+  1. Fetches existing ticket from Supabase. Returns `404` if not found.
+  2. **Database Lock Check**: If `existingTicket.status.toLowerCase() === "closed"`, returns `400 Bad Request`:
+     `"Ticket is already Closed and locked in the database. Further updates are prohibited."`
+  3. Sets `targetStatus` to requested status or retains current status (updating `"Open"` to `"In Progress"` when notes are added).
+  4. If `targetStatus === "Closed"`, calculates exact `resolution_time` in minutes (`current_time - created_date`).
+  5. Updates Supabase `tickets` record.
+  6. If closing ticket, triggers `analyzeCurrentTicket(ticket_id)` AI service to extract `root_cause`, `repair_method`, `repair_type`, and `preventive_action` and updates the ticket and `ai_analysis` table.
+  7. Returns HTTP `200 OK` JSON with updated ticket data and AI analysis.
 
 ---
 
@@ -209,26 +193,11 @@ team-Ghazal/
 - **Route Handler**: `backend/routes/aiRoutes.js` -> `backend/controllers/aiController.js`
 - **Parameters**: `ticket_id`
 - **Detailed Logic**:
-  1. Fetches current ticket from Supabase `tickets` table by `ticket_id`. Throws error if ticket not found.
-  2. Extracts search keywords from `ticket.issue` (first 3 words).
-  3. Finds similar historical tickets in Supabase via ILIKE query: `.from("tickets").select("*").ilike("issue", %keywords%).limit(10)`.
-  4. Excludes current ticket from historical results.
-  5. Checks Redis cache using key `analysis:<lowercased_issue>`. If cached, returns parsed JSON immediately (**Cache Hit**).
-  6. On **Cache Miss**, invokes Ollama service `analyzeTicket(ticket, similarTickets)` in `backend/services/aiService.js`.
-  7. Parses AI JSON response (fields: `root_cause`, `repair_method`, `repair_type`, `confidence_score`, `preventive_action`, `historical_pattern`, `recommended_fix`).
-  8. Saves analysis response to Redis with 24-hour expiration (`EX: 86400`).
-  9. Inserts analysis record into Supabase `ai_analysis` table (`ticket_id`, `root_cause`, `repair_method`, `repair_type`, `confidence_score`, `preventive_action`, `historical_pattern`, `recommended_fix`, `similar_tickets_found`).
-  10. Returns HTTP `200 OK` JSON response:
-      ```json
-      {
-        "success": true,
-        "ticket_id": "...",
-        "similar_tickets_found": 3,
-        "analysis_saved": true,
-        "historical_tickets": [ ... ],
-        "analysis": { ... }
-      }
-      ```
+  1. Fetches ticket record from Supabase `tickets` table by `ticket_id`.
+  2. Extracts keywords from `ticket.issue` to query similar historical tickets (`.ilike("issue", %keywords%).limit(10)`).
+  3. Checks Redis cache (`analysis:<lowercased_issue>`). Returns cached result on **Cache Hit**.
+  4. On **Cache Miss**, invokes Ollama LLM service `analyzeTicket(ticket, similarTickets)` in `backend/services/aiService.js`.
+  5. Stores generated analysis into Redis (24h TTL) and inserts record into Supabase `ai_analysis` table.
 
 ---
 
@@ -239,29 +208,21 @@ team-Ghazal/
 - **Middleware**: `verifyToken`
 - **Detailed Logic**:
   1. Reads `engineer_id` from decoded token `req.user.engineer_id`.
-  2. Queries Supabase: `.from("tickets").select("*").eq("engineer_id", engineer_id)`.
-  3. Returns `500` on error, or returns JSON array of tickets assigned to the logged-in technician.
+  2. Queries Supabase `tickets` table: `.from("tickets").select("*").eq("engineer_id", Number(engineer_id))`.
+  3. Returns JSON array of assigned tickets for the logged-in technician.
 
 ---
 
 ## 5. Authentication & Role-Based Access Control (RBAC) Flow
 
-### Client-Side Authentication (`frontend/lib/auth.js` & `frontend/lib/protectedRoute.js`)
-- `getToken()`: Parses `document.cookie` for `token=...`.
-- `getUser()`: Uses `jwtDecode(token)` to extract `{ id, email, role, engineer_id }`.
-- `requireAdmin()`: Called on component mount. Checks if user token exists and `user.role.toLowerCase() === "admin"`. Redirects non-admin users to `/login`.
-- `logout()`: Clears `token` cookie and redirects to `/login`.
+### Client-Side Protection (`frontend/lib/protectedRoute.js`)
+- `requireAdmin()`: Restricts access to `ADMIN` role. Used on `/dashboard`, `/tickets`, `/analytics`, `/ticketDetails`.
+- `requireTechnician()`: Restricts access to `TECHNICIAN` role. Used on `/technicianDashboard`, `/technicianTickets`, `/technicianTicketDetails`.
 
 ### Next.js Server Middleware (`frontend/middleware.js`)
-- Protects `/dashboard`, `/analytics`, `/tickets`, `/aiEngine`, `/security`.
-- Checks for `token` cookie.
-- Decodes JWT and ensures `user.role.toLowerCase() === "admin"`.
-- Protects `/technicianDashboard` requiring `user.role.toLowerCase() === "technician"`.
-- Redirects unauthorized requests to `/login`.
-
-### Express Backend Middleware (`backend/middleware/authMiddleware.js` & `roleMiddleware.js`)
-- `verifyToken`: Reads `req.cookies.token`, verifies via `jwt.verify(token, JWT_SECRET)`, attaches `req.user`.
-- `requireRole(...roles)`: Verifies `req.user.role` matches allowed roles before controller execution.
+- **Admin Routes**: `/dashboard`, `/tickets`, `/analytics`, `/ticketDetails` $\rightarrow$ Enforces `role === "admin"`.
+- **Technician Routes**: `/technicianDashboard`, `/technicianTickets`, `/technicianTicketDetails` $\rightarrow$ Enforces `role === "technician"`.
+- **Redirects**: Unauthenticated or unauthorized role requests are automatically redirected to `/login`.
 
 ---
 
@@ -270,6 +231,6 @@ team-Ghazal/
 1. **Do Not Rewrite Working Code**: Maintain existing patterns, API contracts, and file boundaries.
 2. **Reuse Existing APIs**: Always check `backend/routes/` and `backend/controllers/` before introducing any new logic.
 3. **No Direct Database Access from Frontend**: All database operations must go through Express backend controllers via `apiFetch()`.
-4. **Preserve Design System**: Retain existing OpsMemory AI styling (colors, typography, cards, borders, icons).
-5. **Handle All UI States**: Ensure components implement Loading indicators, Error banners with Retry triggers, and Empty state views.
+4. **Preserve Design System**: Retain standard OpsMemory AI styling (colors, typography, cards, borders, icons).
+5. **Enforce DB Locking**: Closed tickets must remain read-only and immutable.
 <!-- END:nextjs-agent-rules -->

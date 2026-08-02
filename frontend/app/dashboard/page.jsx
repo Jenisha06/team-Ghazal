@@ -131,6 +131,9 @@ function TopNav({ user }) {
           <Link href="/analytics" className="hover:text-[#2B2118] transition">
             Analytics
           </Link>
+          <Link href="/aiEngine" className="hover:text-[#2B2118] transition">
+            AI Engine
+          </Link>
         </nav>
       </div>
 
